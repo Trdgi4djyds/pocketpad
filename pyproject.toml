@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pocketpad"
+version = "0.1.0"
+description = "Transforme un smartphone en manette pour jeux PC (USB, Wi-Fi, Internet, Bluetooth)"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+dependencies = ["aiohttp>=3.9"]
+
+[project.optional-dependencies]
+windows = ["vgamepad>=0.1.0"]
+linux = ["evdev>=1.6"]
+keyboard = ["pynput>=1.7"]
+qr = ["qrcode>=7.4"]
+dev = ["pytest>=7"]
+
+[project.scripts]
+pocketpad = "pocketpad.server:main"
+pocketpad-relay = "pocketpad.relay:main"
+
+[tool.setuptools.package-data]
+pocketpad = ["web/*"]
