@@ -1,8 +1,6 @@
 import { Capacitor, registerPlugin, type PluginListenerHandle } from '@capacitor/core'
-import { Haptics, ImpactStyle } from '@capacitor/haptics'
 import { getModel } from '../shared/catalog'
 import {
-  DEFAULT_PORT,
   PROTOCOL_VERSION,
   hidReport,
   neutralState,
@@ -14,6 +12,7 @@ import {
   type Transport,
 } from '../shared/protocol'
 import { getSettings } from './store'
+import { gameRumble, stopRumble } from './haptics'
 import { useSyncExternalStore } from 'react'
 
 // --- Plugin natif Android : le téléphone devient une manette Bluetooth HID ---
@@ -60,18 +59,8 @@ export interface ConnInfo {
   bt: { supported: boolean | null; reason?: string; registered: boolean; connected: boolean; host?: string }
 }
 
-/** Convertit une saisie libre (« 192.168.1.20 », « monpc.fr:47800 », « ws://… ») en URL WebSocket. */
-export function buildWsUrl(input: string) {
-  const raw = input.trim()
-  if (/^wss?:\/\//i.test(raw)) {
-    const u = new URL(raw)
-    if (!u.pathname || u.pathname === '/') u.pathname = '/ws'
-    return u.toString()
-  }
-  const host = raw.replace(/^https?:\/\//i, '').replace(/\/.*$/, '')
-  const hasPort = /^\[.*\]:\d+$/.test(host) || (/:\d+$/.test(host) && host.split(':').length === 2)
-  return `ws://${hasPort ? host : `${host}:${DEFAULT_PORT}`}/ws`
-}
+export { buildWsUrl } from '../shared/ws'
+import { buildWsUrl } from '../shared/ws'
 
 const MAX_RETRIES = 8
 
@@ -86,7 +75,6 @@ class ConnectionManager {
   private pingTimer: ReturnType<typeof setInterval> | undefined
   private keepTimer: ReturnType<typeof setInterval> | undefined
   private flushTimer: ReturnType<typeof setTimeout> | undefined
-  private rumbleTimer: ReturnType<typeof setInterval> | undefined
   private btHandle: PluginListenerHandle | null = null
   private state: PadState = neutralState()
   private sent: PadState = neutralState()
@@ -203,7 +191,7 @@ class ConnectionManager {
         this.set({ latency: Math.max(1, Math.round(performance.now() - msg.ts)) })
         break
       case 'rumble':
-        this.rumble(Math.max(msg.l, msg.s))
+        gameRumble(msg.l, msg.s)
         break
       case 'error':
         this.manualClose = true
@@ -237,7 +225,7 @@ class ConnectionManager {
     clearInterval(this.keepTimer)
     clearTimeout(this.flushTimer)
     clearTimeout(this.retryTimer)
-    this.rumble(0)
+    stopRumble()
   }
 
   // ----- Bluetooth HID (Android uniquement) -----
@@ -310,18 +298,6 @@ class ConnectionManager {
     } else this.sendRaw(stateMessage(this.state))
   }
 
-  private rumble(level: number) {
-    if (level > 20) {
-      if (this.rumbleTimer) return
-      const buzz = () => Haptics.vibrate({ duration: 120 }).catch(() => {})
-      buzz()
-      this.rumbleTimer = setInterval(buzz, 110)
-    } else if (this.rumbleTimer) {
-      clearInterval(this.rumbleTimer)
-      this.rumbleTimer = undefined
-    }
-  }
-
   private disconnectWs() {
     this.manualClose = true
     this.stopTimers()
@@ -341,8 +317,3 @@ class ConnectionManager {
 export const connection = new ConnectionManager()
 
 export const useConnection = () => useSyncExternalStore(connection.subscribe, connection.getInfo)
-
-/** Petite vibration au toucher d'un bouton. */
-export function tick() {
-  if (getSettings().haptics) Haptics.impact({ style: ImpactStyle.Light }).catch(() => {})
-}

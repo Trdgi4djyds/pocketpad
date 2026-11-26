@@ -8,8 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "format": "oxfmt",
-    "build:mobile": "vite build --mode mobile --outDir out/mobile --emptyOutDir",
-    "build:pc": "vite build --mode pc --base /hub/ --outDir out/pc --emptyOutDir",
+    "build:mobile": "NODE_ENV=production vite build --mode mobile --outDir out/mobile --emptyOutDir",
+    "build:pc": "NODE_ENV=production vite build --mode pc --base /hub/ --outDir out/pc --emptyOutDir",
     "build:apps": "pnpm build:mobile && pnpm build:pc"
   },
   "dependencies": {

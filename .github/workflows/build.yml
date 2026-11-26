@@ -28,20 +28,20 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Vérification TypeScript
         run: pnpm exec tsc --noEmit
-      - name: Compilation des deux applications (APK et logiciel PC)
+      - name: Compilation des applications (téléphone + TV, logiciel PC)
         run: pnpm build:apps
-      - name: Auto-test du serveur du Hub
+      - name: Auto-test du serveur du Hub (manettes, TV, diffusion)
         working-directory: desktop
         run: |
-          npm install --no-save --no-package-lock --ignore-scripts ws@8
-          node scripts/selftest.cjs
+          mkdir -p "$RUNNER_TEMP/ws" && (cd "$RUNNER_TEMP/ws" && npm init -y > /dev/null && npm install --no-audit --no-fund ws@8 > /dev/null)
+          NODE_PATH="$RUNNER_TEMP/ws/node_modules" node scripts/selftest.cjs
       - uses: actions/upload-artifact@v4
         with:
           name: apps
           path: out
 
   android:
-    name: Application Android (APK)
+    name: Applications Android (téléphone et TV)
     needs: web
     runs-on: ubuntu-latest
     steps:
@@ -78,7 +78,7 @@ jobs:
           else
             echo "Aucune clé configurée : APK signé en mode debug"
           fi
-      - name: Compilation Gradle
+      - name: Compilation Gradle (saveurs téléphone et TV)
         working-directory: android
         env:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -86,15 +86,20 @@ jobs:
           chmod +x gradlew
           if [ -n "$ANDROID_KEYSTORE_FILE" ]; then
             ./gradlew assembleRelease --no-daemon --stacktrace
-            cp app/build/outputs/apk/release/app-release.apk ../PocketPad-Android.apk
+            cp app/build/outputs/apk/phone/release/app-phone-release.apk ../PocketPad-Android.apk
+            cp app/build/outputs/apk/tv/release/app-tv-release.apk ../PocketPad-TV.apk
           else
             ./gradlew assembleDebug --no-daemon --stacktrace
-            cp app/build/outputs/apk/debug/app-debug.apk ../PocketPad-Android.apk
+            cp app/build/outputs/apk/phone/debug/app-phone-debug.apk ../PocketPad-Android.apk
+            cp app/build/outputs/apk/tv/debug/app-tv-debug.apk ../PocketPad-TV.apk
           fi
+          ls -la ../*.apk
       - uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: PocketPad-Android.apk
+          path: |
+            PocketPad-Android.apk
+            PocketPad-TV.apk
 
   windows:
     name: Logiciel PC (Windows)
@@ -112,9 +117,11 @@ jobs:
       - name: Dépendances (dont le module natif ViGEm)
         working-directory: desktop
         run: npm install
-      - name: Vérifie le module ViGEm
+      - name: Vérifie les modules natifs (ViGEm obligatoire ; Bluetooth et souris optionnels)
         working-directory: desktop
-        run: node -e "require('vigemclient'); console.log('vigemclient OK')"
+        run: |
+          node -e "require('vigemclient'); console.log('vigemclient OK')"
+          node -e "for (const m of ['node-hid', 'koffi']) { try { require(m); console.log(m, 'OK') } catch (e) { console.log(m, 'ABSENT :', e.message) } }"
       - name: Outils embarqués (ADB + pilote ViGEmBus)
         shell: pwsh
         working-directory: desktop

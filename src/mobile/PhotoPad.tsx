@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEven
 import type { ControllerModel, Skin, Spot } from '../shared/catalog'
 import { BTN, neutralState, type PadState } from '../shared/protocol'
 import { alpha, mix } from '../shared/color'
-import { tick } from './connection'
+import { touchPulse } from './haptics'
 
 // Manette jouable construite sur la vraie photo : chaque zone tactile correspond à un bouton réel.
 // Un seul gestionnaire de pointeurs attribue chaque doigt au contrôle le plus proche (multi-touch, glissement).
@@ -206,7 +206,7 @@ export function PhotoPad({ model, skin, onState, center }: Props) {
     if (!g) return
     const s = computeState(g.controls, pointers.current, pulses.current)
     const rising = s.b & ~prev.current.b & ~(BTN.LS | BTN.RS)
-    if (rising || (s.lt && !prev.current.lt) || (s.rt && !prev.current.rt)) tick()
+    if (rising || (s.lt && !prev.current.lt) || (s.rt && !prev.current.rt)) touchPulse()
     prev.current = s
     setVis(s)
     onState(s)
@@ -274,7 +274,7 @@ export function PhotoPad({ model, skin, onState, center }: Props) {
     if (c?.kind === 'stick' && performance.now() - p.t0 < 220 && p.moved < 0.35) {
       const mask = c.side === 'L' ? BTN.LS : BTN.RS
       pulses.current |= mask
-      tick()
+      touchPulse()
       setTimeout(() => {
         pulses.current &= ~mask
         update()
@@ -337,31 +337,7 @@ export function PhotoPad({ model, skin, onState, center }: Props) {
               const vx = c.side === 'L' ? vis.lx : vis.rx
               const vy = c.side === 'L' ? vis.ly : vis.ry
               const clicked = (vis.b & (c.side === 'L' ? BTN.LS : BTN.RS)) !== 0
-              const moving = clicked || Math.hypot(vx, vy) > 0.02
-              const cap = c.r * 1.06
-              const ox = vx * c.r * 0.55
-              const oy = -vy * c.r * 0.55
-              return (
-                <div key={i} className="pointer-events-none absolute" style={{ left: c.x - cap, top: c.y - cap, width: cap * 2, height: cap * 2 }}>
-                  {moving && (
-                    <>
-                      {/* Puits sombre sous le capuchon déplacé */}
-                      <div className="absolute inset-0 rounded-full" style={{ background: 'radial-gradient(circle at 50% 45%, #050506, #17181c 70%, #2a2b31)', boxShadow: 'inset 0 6px 14px rgba(0,0,0,0.85)' }} />
-                      {/* Capuchon découpé dans la photo, qui suit le doigt */}
-                      <div
-                        className="absolute inset-0 rounded-full"
-                        style={{
-                          transform: `translate(${ox}px, ${oy}px) scale(${clicked ? 0.94 : 1})`,
-                          backgroundImage: `url(${skin.photo})`,
-                          backgroundSize: `${geo.img.w}px ${geo.img.h}px`,
-                          backgroundPosition: `${-(c.x - cap - geo.img.left)}px ${-(c.y - cap - geo.img.top)}px`,
-                          boxShadow: `0 8px 14px rgba(0,0,0,0.5)${clicked ? `, 0 0 0 3px ${alpha(skin.accent, 0.9)}, 0 0 22px ${skin.accent}` : ''}`,
-                        }}
-                      />
-                    </>
-                  )}
-                </div>
-              )
+              return <Stick key={i} c={c} skin={skin} img={geo.img} vx={vx} vy={vy} clicked={clicked} />
             }
             if (c.kind === 'dpad') {
               const arms: Array<[number, number, number]> = [
@@ -428,7 +404,7 @@ export function PhotoPad({ model, skin, onState, center }: Props) {
   )
 }
 
-/** Bouton enfoncé : ombre intérieure + lueur de la couleur d'accent. */
+/** Bouton enfoncé : la touche s'enfonce (ombre intérieure) avec un liseré discret de la couleur d'accent. */
 function Press({ x, y, r, accent }: { x: number; y: number; r: number; accent: string }) {
   return (
     <div
@@ -438,9 +414,90 @@ function Press({ x, y, r, accent }: { x: number; y: number; r: number; accent: s
         top: y - r,
         width: r * 2,
         height: r * 2,
-        background: 'radial-gradient(circle at 50% 40%, rgba(0,0,0,0.38), rgba(0,0,0,0.18) 60%, rgba(0,0,0,0.05) 100%)',
-        boxShadow: `inset 0 4px 10px rgba(0,0,0,0.55), 0 0 0 2px ${alpha(accent, 0.9)}, 0 0 20px 2px ${alpha(accent, 0.65)}`,
+        background: 'radial-gradient(circle at 50% 42%, rgba(0,0,0,0.34), rgba(0,0,0,0.16) 62%, rgba(0,0,0,0.04) 100%)',
+        boxShadow: `inset 0 ${Math.max(2, r * 0.18)}px ${Math.max(5, r * 0.45)}px rgba(0,0,0,0.55), 0 0 0 1.5px ${alpha(accent, 0.8)}, 0 0 ${Math.max(10, r * 0.9)}px ${alpha(accent, 0.45)}`,
       }}
     />
+  )
+}
+
+/**
+ * Stick analogique réaliste : le capuchon est découpé dans l'image au rayon exact et reste toujours affiché
+ * (au repos il se confond avec l'image). En mouvement il glisse et s'incline en perspective au-dessus du puits,
+ * en laissant voir le dôme et l'ombre portée, comme un vrai stick.
+ */
+function Stick({ c, skin, img, vx, vy, clicked }: { c: Extract<Control, { kind: 'stick' }>; skin: Skin; img: Geometry['img']; vx: number; vy: number; clicked: boolean }) {
+  const r = c.r
+  const W = r * 1.06
+  const mag = Math.min(1, Math.hypot(vx, vy))
+  const travel = r * 0.4
+  const ox = vx * travel
+  const oy = -vy * travel
+  const moving = mag > 0.015 || clicked
+  const well = skin.well ?? (skin.tone === 'light' ? '#5d6067' : '#09090b')
+  const tilt = 17
+  const capStyle = {
+    left: W - r,
+    top: W - r,
+    width: r * 2,
+    height: r * 2,
+    transform: `translate(${ox}px, ${oy}px) rotateX(${vy * tilt}deg) rotateY(${vx * tilt}deg) scale(${clicked ? 0.94 : 1})`,
+  }
+  return (
+    <div className="pointer-events-none absolute" style={{ left: c.x - W, top: c.y - W, width: W * 2, height: W * 2, perspective: r * 5 }}>
+      {moving && (
+        <>
+          {/* Puits : l'ouverture de la coque sous le capuchon */}
+          <div
+            className="absolute inset-0 rounded-full"
+            style={{
+              background: `radial-gradient(circle at 50% 40%, ${mix(well, '#000000', 0.6)} 0%, ${well} 64%, ${mix(well, '#ffffff', 0.1)} 100%)`,
+              boxShadow: `inset 0 ${r * 0.16}px ${r * 0.32}px rgba(0,0,0,0.78), inset 0 ${-r * 0.04}px ${r * 0.08}px rgba(255,255,255,0.07)`,
+            }}
+          />
+          {/* Dôme et axe du stick, qui suivent l'inclinaison */}
+          <div
+            className="absolute rounded-full"
+            style={{
+              left: W - r * 0.64,
+              top: W - r * 0.64,
+              width: r * 1.28,
+              height: r * 1.28,
+              transform: `translate(${ox * 0.42}px, ${oy * 0.42}px)`,
+              background: `radial-gradient(circle at ${50 - vx * 16}% ${36 + vy * 16}%, ${mix(well, '#ffffff', 0.3)} 0%, ${well} 52%, ${mix(well, '#000000', 0.65)} 100%)`,
+              boxShadow: `0 0 ${r * 0.18}px rgba(0,0,0,0.6)`,
+            }}
+          />
+          {/* Ombre portée du capuchon */}
+          <div
+            className="absolute rounded-full"
+            style={{
+              ...capStyle,
+              transform: `translate(${ox * 0.8}px, ${oy * 0.8 + r * 0.1}px) scale(${0.96 - mag * 0.04})`,
+              background: 'rgba(0,0,0,0.55)',
+              filter: `blur(${r * 0.16}px)`,
+              opacity: 0.35 + mag * 0.45,
+            }}
+          />
+        </>
+      )}
+      {/* Capuchon découpé dans l'image, bord adouci */}
+      <div
+        className="absolute rounded-full"
+        style={{
+          ...capStyle,
+          backgroundImage: `url(${skin.photo})`,
+          backgroundSize: `${img.w}px ${img.h}px`,
+          backgroundPosition: `${-(c.x - r - img.left)}px ${-(c.y - r - img.top)}px`,
+          filter: clicked ? 'brightness(0.86)' : undefined,
+          WebkitMaskImage: 'radial-gradient(circle closest-side, #000 calc(100% - 1.5px), transparent 100%)',
+          maskImage: 'radial-gradient(circle closest-side, #000 calc(100% - 1.5px), transparent 100%)',
+        }}
+      >
+        {/* Reflet qui se déplace avec l'inclinaison */}
+        {moving && <div className="absolute inset-0" style={{ background: `radial-gradient(circle at ${36 + vx * 22}% ${30 - vy * 22}%, rgba(255,255,255,${0.06 + mag * 0.12}), transparent 62%)` }} />}
+        {clicked && <div className="absolute inset-0 rounded-full" style={{ boxShadow: `inset 0 0 0 ${Math.max(1.5, r * 0.05)}px ${alpha(skin.accent, 0.85)}` }} />}
+      </div>
+    </div>
   )
 }

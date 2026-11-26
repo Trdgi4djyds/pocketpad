@@ -7,13 +7,25 @@ android {
         applicationId "com.pocketpad.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2
-        versionName "1.0.1"
+        versionCode 3
+        versionName "1.1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
              // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    // Deux applications depuis le même code : la manette (téléphone) et PocketPad TV
+    flavorDimensions = ["device"]
+    productFlavors {
+        phone {
+            dimension "device"
+            applicationId "com.pocketpad.app"
+        }
+        tv {
+            dimension "device"
+            applicationId "com.pocketpad.tv"
         }
     }
     // Signature stable (fournie par la CI) : les nouvelles versions s'installent par-dessus les anciennes

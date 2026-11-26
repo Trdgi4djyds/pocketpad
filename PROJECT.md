@@ -1,7 +1,8 @@
 # PocketPad
 
-Manette portable pour jeux PC : application Android + logiciel PC Windows (PocketPad Hub).
-Connexions : câble USB (ADB), Wi-Fi, Internet (PIN) et Bluetooth HID.
+Trois applications : la manette Android (téléphone), PocketPad TV (Android TV / Google TV) et le logiciel PC Windows PocketPad Hub.
+Connexions des manettes : Wi-Fi (PC trouvés automatiquement), câble USB (ADB), Internet (PIN) et Bluetooth HID (relayé en Xbox 360 par le Hub).
+Diffusion de l'écran et du son du PC vers la TV en WebRTC ; manettes de la TV renvoyées au PC.
 
 ## Dépôt GitHub
 

@@ -7,7 +7,12 @@ export interface Settings {
   /** Coloris choisi pour chaque modèle */
   skins: Record<string, string>
   playerName: string
-  haptics: boolean
+  /** Vibration à chaque appui sur une touche */
+  vibeTouch: boolean
+  vibeTouchLevel: number
+  /** Vibrations envoyées par le jeu (moteurs de la manette) */
+  vibeGame: boolean
+  vibeGameLevel: number
   output: OutputType | 'auto'
   recentHosts: string[]
   lastHost: string
@@ -20,7 +25,10 @@ const defaults: Settings = {
   modelId: CONTROLLERS[0].id,
   skins: Object.fromEntries(CONTROLLERS.map((m) => [m.id, m.skins[0].id])),
   playerName: 'Joueur 1',
-  haptics: true,
+  vibeTouch: true,
+  vibeTouchLevel: 0.5,
+  vibeGame: true,
+  vibeGameLevel: 0.85,
   output: 'auto',
   recentHosts: [],
   lastHost: '',
@@ -31,14 +39,20 @@ function load(): Settings {
   try {
     const raw = localStorage.getItem(KEY)
     if (!raw) return defaults
-    const parsed = JSON.parse(raw) as Partial<Settings>
+    const parsed = JSON.parse(raw) as Partial<Settings> & { haptics?: boolean }
+    // Ancien réglage unique « haptics » (versions 1.0.x)
+    if (parsed.haptics === false) {
+      parsed.vibeTouch ??= false
+      parsed.vibeGame ??= false
+    }
+    delete parsed.haptics
     return { ...defaults, ...parsed, skins: { ...defaults.skins, ...parsed.skins } }
   } catch {
     return defaults
   }
 }
 
-/** Lien direct : ?model=xbox&skin=electric-volt */
+/** Lien direct : ?model=xbox&skin=xb-shock */
 function fromUrl(s: Settings): Settings {
   try {
     const q = new URLSearchParams(location.search)

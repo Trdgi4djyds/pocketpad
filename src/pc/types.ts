@@ -1,4 +1,4 @@
-import type { OutputType, PadState, Transport } from '../shared/protocol'
+import type { GameEntry, OutputType, PadState, StreamPreset, StreamStats, Transport } from '../shared/protocol'
 
 export interface HubPlayer {
   id: string
@@ -14,6 +14,20 @@ export interface HubPlayer {
   virtual: boolean
   state: PadState
   connectedAt: number
+}
+
+/** Application PocketPad TV connectée au Hub */
+export interface HubViewer {
+  id: string
+  name: string
+  address: string
+  watching: boolean
+  mode: 'desktop' | 'game'
+  preset: StreamPreset
+  stats: StreamStats | null
+  latency: number | null
+  connectedAt: number
+  pads: number
 }
 
 export interface HubDevice {
@@ -39,6 +53,10 @@ export interface HubSnapshot {
   driver: { available: boolean; connected: boolean; error?: string; installer: boolean }
   adb: { available: boolean; devices: HubDevice[]; error?: string }
   players: HubPlayer[]
+  viewers: HubViewer[]
+  games: Array<GameEntry & { icon?: string }>
+  stream: { ready: boolean; mouse: boolean }
+  bt: { available: boolean; enabled: boolean }
   logs: HubLog[]
   demo?: boolean
 }
@@ -48,11 +66,23 @@ export interface HubApi {
   onSnapshot(cb: (s: HubSnapshot) => void): () => void
   setOutput(id: string, out: OutputType): void
   kick(id: string): void
+  /** Vibration d'essai sur la manette du joueur */
+  testRumble(id: string): void
   regeneratePin(): void
   installDriver(): void
   openExternal(url: string): void
   /** Ouvre le panneau Windows « Contrôleurs de jeu » (joy.cpl) */
   testController(): void
-  /** Ajoute la règle de pare-feu Windows pour le Wi-Fi (demande l'autorisation administrateur) */
+  /** Ajoute les règles de pare-feu Windows (demande l'autorisation administrateur) */
   allowFirewall(): void
+  refreshGames(): void
+  launchGame(id: string): Promise<{ ok: boolean; msg?: string } | undefined>
+  addGame(): void
+  removeGame(id: string): void
+  setBluetoothBridge(on: boolean): void
+}
+
+/** API de la fenêtre de diffusion (preload Electron) */
+export interface StreamApi {
+  getSource(): Promise<{ id: string; width: number; height: number } | null>
 }

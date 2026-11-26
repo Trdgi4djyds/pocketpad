@@ -1,129 +1,144 @@
 # PocketPad
 
-**Deux logiciels qui fonctionnent ensemble pour jouer à vos jeux PC avec votre téléphone :**
+**Trois applications qui fonctionnent ensemble pour jouer à vos jeux PC avec votre téléphone, et sur votre TV :**
 
-| Appareil | Logiciel | Rôle |
+| Appareil | Application | Rôle |
 | --- | --- | --- |
-| Téléphone | **PocketPad** — APK Android | Transforme le téléphone en manette. Vous choisissez une vraie manette (photos réelles) et vous jouez en tactile. |
-| PC | **PocketPad Hub** — logiciel PC Windows (installable) | Reçoit les téléphones par câble USB, Wi-Fi ou Internet et crée de vraies manettes Xbox 360 / DualShock 4 que les jeux reconnaissent. |
+| Téléphone | **PocketPad** (`PocketPad-Android.apk`) | Le téléphone devient une vraie manette : DualSense, Xbox, Switch Pro, GameCube… en tactile, avec vibrations. |
+| PC Windows | **PocketPad Hub** (`PocketPad-Hub-Setup.exe`) | Crée de vraies manettes Xbox 360 que tous les jeux reconnaissent, lance vos jeux et diffuse l'écran vers la TV. |
+| Android TV / Google TV | **PocketPad TV** (`PocketPad-TV.apk`) | Affiche l'écran du PC en direct, lance les jeux, et transmet au PC les manettes branchées sur la TV. |
 
-En Bluetooth, le téléphone est directement reconnu par Windows comme une manette, sans logiciel PC.
-
-![Application Android](docs/screenshots/03-apk-dualsense.jpg)
+![PocketPad sur le téléphone](docs/screenshots/01-apk-vitrine.jpg)
 
 ## Téléchargement
 
-**[Dernière version](https://github.com/Trdgi4djyds/pocketpad/releases/latest)** — compilée automatiquement par GitHub Actions.
+**[Dernière version](https://github.com/Trdgi4djyds/pocketpad/releases/latest)**, compilée automatiquement par GitHub Actions.
 
 | Fichier | À installer sur |
 | --- | --- |
-| `PocketPad-Android.apk` | le téléphone (Android 7+, mode Bluetooth : Android 9+) |
-| `PocketPad-Hub-Setup.exe` | le PC Windows 10/11 — installateur (propose le pilote ViGEmBus) |
-| `PocketPad-Hub-Portable.exe` | le PC Windows — version portable |
-
-## L'application Android (la manette)
-
-De vraies photos de manettes, détourées, sur lesquelles chaque zone tactile correspond au bouton réel :
-
-| Vitrine | En jeu |
-| --- | --- |
-| ![GameCube Spice Orange](docs/screenshots/04-apk-gamecube.jpg) | ![DualSense en jeu](docs/screenshots/05-apk-jeu-dualsense.jpg) |
-| ![Xbox Phantom White](docs/screenshots/09-apk-xbox.jpg) | ![Pro Controller Zelda en jeu](docs/screenshots/06-apk-jeu-switch.jpg) |
-
-- **6 manettes, 14 coloris réels** : DualSense (Midnight Black, Blanc, Chroma Pearl), DualShock 4, Xbox Wireless (Series Carbon Black, One Phantom White), Pro Controller Switch (Noir, Zelda), GameCube (Indigo, Spice Orange, Emerald Blue, Smash Bros.), Super Nintendo (PAL, US).
-- **Multi-touch** : sticks analogiques dont le capuchon suit le doigt, clic L3/R3 par pression brève, croix 8 directions, glissement d'un bouton à l'autre, gâchettes et tranches, pavé tactile, vibrations.
-- **Connexion** : câble USB, Wi-Fi, Internet (code PIN) ou Bluetooth HID.
-
-![Connexion](docs/screenshots/10-apk-connexion.jpg)
-
-## Le logiciel PC (PocketPad Hub)
-
-![PocketPad Hub — joueurs](docs/screenshots/07-pc-joueurs.jpg)
-
-- Jusqu'à **4 joueurs**, chacun affiché avec sa manette et **ses boutons en direct**.
-- **Vraie manette Windows** via le pilote ViGEmBus : Xbox 360 (XInput) ou DualShock 4, au choix par joueur.
-- **USB automatique** : le Hub embarque ADB et crée le tunnel `adb reverse` dès qu'un téléphone est branché.
-- **QR code** pour jouer depuis le navigateur du téléphone sans rien installer, **code PIN** pour l'accès Internet, vibrations du jeu renvoyées au téléphone.
-
-![PocketPad Hub — connexion](docs/screenshots/08-pc-connexion.jpg)
+| [`PocketPad-Android.apk`](https://github.com/Trdgi4djyds/pocketpad/releases/latest/download/PocketPad-Android.apk) | le téléphone (Android 7+, Bluetooth : Android 9+) |
+| [`PocketPad-TV.apk`](https://github.com/Trdgi4djyds/pocketpad/releases/latest/download/PocketPad-TV.apk) | la TV (Android TV, Google TV, Chromecast avec Google TV, Shield…) |
+| [`PocketPad-Hub-Setup.exe`](https://github.com/Trdgi4djyds/pocketpad/releases/latest/download/PocketPad-Hub-Setup.exe) | le PC Windows 10/11 : installateur (pilote ViGEmBus et pare-feu inclus) |
+| [`PocketPad-Hub-Portable.exe`](https://github.com/Trdgi4djyds/pocketpad/releases/latest/download/PocketPad-Hub-Portable.exe) | le PC Windows : version portable |
 
 ## Démarrage rapide
 
-1. **PC** : installez `PocketPad-Hub-Setup.exe` et acceptez le pilote **ViGEmBus**. Au premier lancement, autorisez PocketPad Hub dans le pare-feu Windows (réseau privé).
-2. **Téléphone** : installez `PocketPad-Android.apk` (autorisez l'installation depuis une source inconnue).
-3. Dans l'app, choisissez votre manette et son coloris, puis **Connecter au PC** :
-   - **USB** : activez le *débogage USB* (Paramètres › À propos › 7 appuis sur « Numéro de build », puis Options pour les développeurs), branchez le câble, touchez « Connecter par USB ».
-   - **Wi-Fi** : saisissez l'adresse affichée par le Hub (ex. `192.168.1.20`).
-   - **Internet** : adresse publique du PC (port TCP 47800 redirigé sur la box) + code PIN du Hub.
-   - **Bluetooth** : « Activer la manette Bluetooth » › « Rendre visible », puis sur le PC : Paramètres › Bluetooth › Ajouter un appareil.
-4. Touchez **Jouer**.
+1. **PC** : installez `PocketPad-Hub-Setup.exe` et répondez **Oui** au pilote **ViGEmBus**.
+2. **Téléphone** : installez l'APK, choisissez votre manette, touchez l'icône **Wi-Fi** : le PC apparaît tout seul. Touchez-le, puis **Jouer**.
+3. **TV** : installez `PocketPad-TV.apk`, choisissez le PC, puis **Bureau** ou un jeu.
 
-> Le mode Bluetooth expose une manette générique (DirectInput) : pratique pour Steam et les émulateurs, mais **GTA V et les jeux Xbox ne la reconnaissent pas**. Pour eux, utilisez l'USB ou le Wi-Fi avec le Hub.
+## Le téléphone : la manette
+
+| Vitrine | En jeu |
+| --- | --- |
+| ![Xbox Shock Blue](docs/screenshots/02-apk-vitrine-xbox.jpg) | ![DualSense en jeu, sticks en mouvement](docs/screenshots/03-apk-jeu-dualsense.jpg) |
+| ![Réglages des vibrations](docs/screenshots/05-apk-reglages.jpg) | ![Xbox Robot White en jeu](docs/screenshots/04-apk-jeu-xbox.jpg) |
+
+- **6 manettes, 11 coloris** en rendus studio neufs, vus de face : DualSense (Blanc, Midnight Black, Cosmic Red), DualShock 4 (Jet Black, Glacier White), Xbox Series (Carbon Black, Robot White, Shock Blue), Pro Controller Switch, GameCube Indigo, Super Nintendo.
+- **Sticks analogiques réalistes** : le capuchon glisse et s'incline au-dessus de son logement, avec l'ombre et le dôme visibles ; clic L3 / R3 par pression brève.
+- **Vibrations réglables** : touches et jeu séparément, avec intensité et bouton d'essai. Les vibrations du jeu (moteurs de la manette) sont rejouées avec leur intensité réelle.
+- **Connexion** : Wi-Fi (PC trouvés automatiquement), câble USB, Internet (code PIN) ou Bluetooth.
+
+## Le PC : PocketPad Hub
+
+![PocketPad Hub — manettes](docs/screenshots/06-pc-manettes.jpg)
+
+- Jusqu'à **4 joueurs** (téléphones, manettes de la TV, Bluetooth), chacun affiché avec ses touches en direct.
+- **Vraie manette Windows** via ViGEmBus : **Xbox 360** par défaut (reconnue par tous les jeux), DualShock 4 au choix.
+- **Relais Bluetooth** : un téléphone appairé en Bluetooth devient lui aussi une manette Xbox 360.
+- Bouton **Vibrer** pour tester les vibrations, **Tester** pour ouvrir le panneau Windows des manettes.
+
+| Jeux | TV |
+| --- | --- |
+| ![Bibliothèque de jeux](docs/screenshots/07-pc-jeux.jpg) | ![Diffusion vers la TV](docs/screenshots/08-pc-tv.jpg) |
+
+- **Bibliothèque** : jeux Steam, Epic Games et Rockstar détectés automatiquement, ajout manuel d'un `.exe`, lancement en un clic (ou depuis la TV).
+- **Diffusion vers la TV** : écran entier et son du PC, avec résolution, images par seconde, débit et latence de chaque TV.
+
+![Connexion](docs/screenshots/09-pc-connexion.jpg)
+
+## La TV : PocketPad TV
+
+![Accueil de PocketPad TV](docs/screenshots/10-tv-accueil.jpg)
+
+| Écran du PC | Diffusion en direct |
+| --- | --- |
+| ![Bureau et jeux du PC](docs/screenshots/11-tv-pc.jpg) | ![Menu de diffusion](docs/screenshots/12-tv-diffusion.jpg) |
+
+- **Trouve le PC tout seul** sur le réseau (ou saisie de l'adresse à la télécommande).
+- **Bureau** : tout l'écran du PC ; la manette pilote la souris (stick gauche : curseur, A : clic, B : clic droit, stick droit : défilement, Start : menu Démarrer, Select : clavier visuel).
+- **Jeux** : choisissez un jeu, il se lance sur le PC et s'affiche sur la TV.
+- **Manettes branchées sur la TV** (Bluetooth ou USB : Xbox, DualSense, DualShock 4, Switch Pro…) : elles deviennent des manettes Xbox 360 sur le PC, vibrations comprises. La télécommande sert aussi de manette simple (croix et OK).
+- **Faible latence, même sur un réseau faible** : WebRTC en UDP, H.264 décodé par la TV, débit adapté en continu, aucune mise en tampon côté TV, et commandes envoyées sans retransmission (une touche n'est jamais retardée par une image perdue).
+- **Menu de diffusion** (Retour, ou Start + Select maintenus) : qualité Auto, Fluide (720p 60 i/s), Qualité (1080p) ou Éco (réseau faible), mode Manette / Souris, statistiques, Quitter.
+
+Pour la meilleure fluidité : PC relié à la box en Ethernet, TV en Wi-Fi 5 GHz ou en Ethernet.
 
 ## Jouer à GTA V (ou n'importe quel jeu PC) pas à pas
 
-GTA V, comme la plupart des jeux PC, n'accepte que les **manettes Xbox** (XInput). Il faut donc passer par **PocketPad Hub** en **USB** ou en **Wi-Fi** : c'est lui qui crée la manette Xbox 360 virtuelle que le jeu reconnaît.
+GTA V, comme la plupart des jeux PC, n'accepte que les **manettes Xbox** (XInput) : c'est PocketPad Hub qui crée cette manette.
 
-1. **Sur le PC** : installez `PocketPad-Hub-Setup.exe` (pas la version portable pour la première fois) et répondez **Oui** à l'installation du pilote **ViGEmBus**. Ouvrez PocketPad Hub : le bandeau orange « Pilote ViGEmBus absent » ne doit pas apparaître.
-2. **Sur le téléphone** : ouvrez PocketPad › **Connecter au PC** :
-   - **USB (recommandé)** : débogage USB activé, câble branché, autorisez le PC sur le téléphone, puis « Connecter par USB » ;
-   - **Wi-Fi** : même réseau que le PC, saisissez l'adresse affichée dans le Hub. Si rien ne se passe : Hub › Connexion › **Autoriser dans le pare-feu**.
-3. **Dans le Hub** : votre joueur apparaît. Vérifiez « Windows voit : **Xbox 360** » (sinon cliquez sur *Xbox 360*). Appuyez sur des touches du téléphone : elles s'allument sur la photo.
-4. Cliquez sur **Tester dans Windows** : la fenêtre *Contrôleurs de jeu* doit lister **Controller (XBOX 360 For Windows)**. Ouvrez *Propriétés* : les boutons et sticks doivent réagir.
-5. **Lancez GTA V** et appuyez sur une touche ou bougez un stick : le jeu passe aussitôt en mode manette.
+1. **PC** : installez `PocketPad-Hub-Setup.exe` et acceptez le pilote **ViGEmBus**. Dans le Hub, l'écusson **ViGEm** doit être vert.
+2. **Téléphone** : PocketPad › icône **Wi-Fi** › touchez votre PC (ou **USB** avec le débogage USB activé). En **Bluetooth**, gardez le Hub ouvert : le relais Bluetooth crée la manette Xbox 360.
+3. **Hub** : votre joueur apparaît avec « Windows voit : **Xbox 360** ». Appuyez sur des touches du téléphone : elles s'allument sur l'image.
+4. **Tester** ouvre *Contrôleurs de jeu* : **Controller (XBOX 360 For Windows)** doit être listé.
+5. **Lancez GTA V** (depuis l'onglet **Jeux** du Hub ou depuis la TV) et touchez un bouton : le jeu passe en mode manette.
 
 | Problème | Solution |
 | --- | --- |
-| Connecté en **Bluetooth**, GTA V ne réagit pas | Normal : le Bluetooth expose une manette générique que GTA V ignore. Utilisez USB ou Wi-Fi avec le Hub. |
-| Rien dans *Contrôleurs de jeu* | Pilote ViGEmBus absent : Hub › Pilote › Installer, puis redémarrez le Hub. |
-| « Windows voit : DualShock 4 » | Cliquez sur *Xbox 360* dans le Hub (ou app › Réglages › Xbox 360). |
-| Le téléphone ne trouve pas le PC en Wi-Fi | Même réseau Wi-Fi, réseau Windows en « Privé », bouton *Autoriser dans le pare-feu*. |
+| Le téléphone ou la TV ne trouve pas le PC | Même réseau, réseau Windows en « Privé », Hub › Connexion › **Autoriser dans le pare-feu**. |
+| Rien dans *Contrôleurs de jeu* | Pilote ViGEmBus absent : bandeau orange du Hub › **Installer**, puis redémarrez le Hub. |
+| « Windows voit : DualShock 4 » | Cliquez sur **Xbox 360** dans le Hub (ou app › Réglages › Xbox 360). |
+| Manette en double dans un jeu (Bluetooth) | Désactivez le relais Bluetooth (Hub › Connexion) ou utilisez le Wi-Fi. |
+| Image saccadée sur la TV | Menu de diffusion › **Fluide** ou **Éco** ; PC en Ethernet ; Wi-Fi 5 GHz. |
+| Écran noir sur la TV pendant un jeu | Passez le jeu en « Plein écran fenêtré » (sans bordure). |
 | GTA V version Steam | Steam › GTA V › Propriétés › Manette : laissez « Par défaut ». |
 
 ## Architecture
 
 ```
-Téléphone : APK PocketPad                         PC Windows : PocketPad Hub
-┌───────────────────────────────┐   WebSocket   ┌──────────────────────────────┐
-│ manette tactile (photo réelle)│ ────────────▶ │ serveur HTTP + WebSocket     │──▶ ViGEmBus ──▶ Jeux
-│ Capacitor + plugin Bluetooth  │  USB (adb) /  │ ADB, PIN, 4 joueurs          │   Xbox 360 / DS4
-└───────────────────────────────┘  Wi-Fi / Web  └──────────────────────────────┘
-               │                ◀── vibrations ──
-               └──────────── Bluetooth HID (sans Hub) ────────────▶ Windows
+Téléphone : PocketPad                       PC Windows : PocketPad Hub                       TV : PocketPad TV
+┌──────────────────────────┐  WebSocket    ┌─────────────────────────────────┐   WebRTC    ┌────────────────────────┐
+│ manette tactile          │ ────────────▶ │ serveur HTTP + WebSocket        │ ──────────▶ │ vidéo + son en direct  │
+│ vibrations dosées        │ ◀── rumble ── │ manettes virtuelles (ViGEmBus)  │ ◀── canal ─ │ manettes de la TV,     │
+└──────────────────────────┘ USB/Wi-Fi/Web │ jeux Steam / Epic / Rockstar    │  de données │ télécommande           │
+             │                             │ diffuseur (capture écran + son) │             └────────────────────────┘
+             └── Bluetooth HID ──▶ relais ─│ souris / clavier (mode bureau)  │──▶ Jeux (Xbox 360)
+                                           └─────────────────────────────────┘
 ```
 
 | Dossier | Contenu |
 | --- | --- |
-| `src/mobile/` | **APK** : vitrine, connexion, manette jouable `PhotoPad.tsx` |
-| `src/pc/` | **Logiciel PC** : interface de PocketPad Hub |
-| `src/shared/` | Protocole commun, catalogue des manettes (photos + position de chaque bouton) |
-| `android/` | Projet Android (Capacitor) + plugin natif `BluetoothGamepadPlugin` / `HidGamepad` |
-| `desktop/` | Programme Electron du Hub : serveur, manettes virtuelles ViGEm, tunnel ADB, installateur |
-| `.github/workflows/build.yml` | Compile l'APK et l'installateur Windows, puis publie la release |
+| `src/mobile/` | Application téléphone : vitrine, connexion, manette jouable `PhotoPad.tsx`, vibrations |
+| `src/tv/` | Application TV : choix du PC, bibliothèque, diffusion (`receiver.ts`), navigation à la télécommande |
+| `src/pc/` | Interface de PocketPad Hub et diffuseur WebRTC (`Streamer.tsx`) |
+| `src/shared/` | Protocole commun, catalogue des manettes (images + position de chaque bouton), pont natif, découverte des PC |
+| `android/` | Projet Android (Capacitor) : saveurs `phone` et `tv`, plugins natifs `PocketPadPlugin` (vibrations, manettes, Retour) et `BluetoothGamepadPlugin` |
+| `desktop/` | Programme Electron du Hub : serveur, ViGEm, jeux, relais Bluetooth, souris, ADB, installateur |
+| `.github/workflows/build.yml` | Compile les deux APK et le logiciel Windows, teste, puis publie la release |
 
 ## Développement
 
 ```bash
 pnpm install
-pnpm dev                  # aperçu des deux logiciels dans leur appareil
-pnpm build:mobile         # APK     → out/mobile
-pnpm build:pc             # PC      → out/pc
+pnpm dev                  # aperçu des trois applications dans leur appareil
+pnpm build:apps           # téléphone + TV → out/mobile, Hub → out/pc
 
-# APK Android
+# APK Android (téléphone et TV)
 pnpm exec cap sync android
-cd android && ./gradlew assembleDebug
+cd android && ./gradlew assembleDebug   # app-phone-debug.apk et app-tv-debug.apk
 
 # Logiciel PC
 mkdir -p desktop/app && cp -r out/mobile out/pc desktop/app/
 cd desktop && npm install
 npm start                 # lance PocketPad Hub
-npm run selftest          # auto-test du serveur
+npm run selftest          # auto-test : manettes, TV, signalisation, souris, Bluetooth
 npm run dist:win          # installateur Windows
 ```
 
-## Crédits et sécurité
+## Sécurité
 
-- Photos des manettes : Wikimedia Commons, sous licences libres. Auteurs et licences dans [CREDITS.md](CREDITS.md).
 - Aucun identifiant n'est stocké dans le dépôt. Les connexions venant d'Internet exigent le code PIN du Hub.
+- Le diffuseur n'accepte que les connexions locales au PC ; la vidéo ne transite jamais par un serveur tiers.
 
-Les noms de manettes sont cités à titre descriptif. PocketPad n'est affilié à aucun constructeur.
+Les noms de manettes et de jeux sont cités à titre descriptif. PocketPad n'est affilié à aucun constructeur ni éditeur.

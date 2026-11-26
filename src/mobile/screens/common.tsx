@@ -11,6 +11,7 @@ export const TRANSPORT_LABEL: Record<string, string> = {
   internet: 'Internet',
   bluetooth: 'Bluetooth',
   browser: 'Wi-Fi',
+  tv: 'TV',
 }
 
 /** Variables de thème selon l'ambiance (claire / sombre) de la photo. */
@@ -43,7 +44,7 @@ export function Logo() {
       <div className="grid size-9 place-items-center rounded-xl bg-[var(--solid)] text-[var(--on-solid)] short:size-7 short:rounded-lg">
         <Gamepad2 className="size-5 short:size-4" strokeWidth={2.2} />
       </div>
-      <span className="font-display text-[17px] font-bold tracking-tight short:hidden">PocketPad</span>
+      <span className="font-display text-[17px] font-bold tracking-tight max-lg:hidden">PocketPad</span>
     </div>
   )
 }
@@ -51,8 +52,8 @@ export function Logo() {
 export function statusText(conn: ConnInfo) {
   if (conn.status === 'connected') return `${TRANSPORT_LABEL[conn.transport ?? 'wifi']}${conn.latency ? ` · ${conn.latency} ms` : ''}`
   if (conn.status === 'connecting') return 'Connexion…'
-  if (conn.status === 'error') return 'Échec de connexion'
-  return 'Hors ligne'
+  if (conn.status === 'error') return 'Échec'
+  return 'Non connecté'
 }
 
 export function StatusDot({ status }: { status: ConnInfo['status'] }) {

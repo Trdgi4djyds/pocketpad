@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Showroom } from './screens/Showroom'
 import { PlayScreen } from './screens/PlayScreen'
 import { ConnectSheet, type SheetTab } from './screens/ConnectSheet'
@@ -7,6 +7,7 @@ import { getModel, getSkin } from '../shared/catalog'
 import { useSettings } from './store'
 import { servedByHub } from '../shared/platform'
 import { DEFAULT_PORT } from '../shared/protocol'
+import { PocketPad, isNativeApp } from '../shared/native'
 
 type Screen = 'showroom' | 'play'
 
@@ -30,6 +31,22 @@ export function MobileApp() {
   }, [])
 
   const closeSheet = useCallback(() => setSheet(null), [])
+
+  // Bouton Retour d'Android : ferme la feuille, quitte la manette, puis l'application
+  const back = useRef(() => {})
+  back.current = () => {
+    if (sheet) setSheet(null)
+    else if (screen === 'play') setScreen('showroom')
+    else PocketPad.exitApp().catch(() => {})
+  }
+  useEffect(() => {
+    if (!isNativeApp) return
+    PocketPad.setBackHandling({ enabled: true }).catch(() => {})
+    const h = PocketPad.addListener('back', () => back.current())
+    return () => {
+      h.then((x) => x.remove()).catch(() => {})
+    }
+  }, [])
 
   return (
     <div className="h-full w-full">

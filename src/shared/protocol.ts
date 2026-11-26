@@ -24,7 +24,7 @@ export const BTN = {
 } as const
 
 export type ButtonName = keyof typeof BTN
-export type Transport = 'usb' | 'wifi' | 'internet' | 'bluetooth' | 'browser'
+export type Transport = 'usb' | 'wifi' | 'internet' | 'bluetooth' | 'browser' | 'tv'
 export type OutputType = 'x360' | 'ds4'
 
 /** État complet d'une manette. Sticks : -1..1 (Y positif = haut). Gâchettes : 0..1. */
@@ -56,9 +56,69 @@ export type ClientMessage =
 export type ServerMessage =
   | { t: 'welcome'; slot: number; hub: string; driver: boolean; out: OutputType }
   | { t: 'pong'; ts: number }
+  /** Moteurs de vibration demandés par le jeu (0..255) */
   | { t: 'rumble'; l: number; s: number }
   | { t: 'out'; out: OutputType }
   | { t: 'error'; code: 'pin' | 'full' | 'version' | 'kicked'; msg: string }
+
+// --- Bibliothèque de jeux et diffusion vers la TV -----------------------------
+
+export type GameSource = 'steam' | 'epic' | 'rockstar' | 'custom'
+
+export interface GameEntry {
+  id: string
+  name: string
+  source: GameSource
+  /** Jaquette verticale (600×900) */
+  art?: string
+  /** Bannière horizontale */
+  hero?: string
+}
+
+/** Qualité de diffusion : auto (adaptative), fluide (720p), qualité (débit élevé), éco (réseau faible). */
+export type StreamPreset = 'auto' | 'smooth' | 'quality' | 'eco'
+
+export interface StreamStats {
+  w: number
+  h: number
+  fps: number
+  /** Débit vidéo en kbit/s */
+  kbps: number
+  /** Aller-retour réseau en ms */
+  rtt: number
+  /** Pertes de paquets (%) */
+  loss: number
+  codec: string
+  encoder?: string
+}
+
+/** Messages de l'application TV (rôle « viewer ») vers le Hub. */
+export type ViewerMessage =
+  | { t: 'viewer'; v: number; name: string; pin?: string }
+  | { t: 'games' }
+  | { t: 'launch'; id: string }
+  | { t: 'watch'; preset: StreamPreset; mode: 'desktop' | 'game' }
+  | { t: 'unwatch' }
+  | { t: 'preset'; preset: StreamPreset }
+  | { t: 'mode'; mode: 'desktop' | 'game' }
+  | { t: 'sig'; data: SignalData }
+  | ({ t: 'tvpad'; i: number; name: string } & PadState)
+  | { t: 'tvpad-off'; i: number }
+  | { t: 'ping'; ts: number; lat?: number }
+
+export type SignalData = { sdp: RTCSessionDescriptionInit } | { ice: RTCIceCandidateInit | null }
+
+/** Messages du Hub vers l'application TV. */
+export type HubToViewer =
+  | { t: 'hub'; name: string; streamer: boolean; players: Array<{ slot: number; name: string; model: string; skin: string; transport: Transport }> }
+  | { t: 'games'; list: GameEntry[] }
+  | { t: 'launched'; id: string; ok: boolean; msg?: string }
+  | { t: 'sig'; data: SignalData }
+  | { t: 'stream-error'; msg: string }
+  /** Vibration demandée par le jeu pour la manette n°i de la TV */
+  | { t: 'rumble'; i: number; l: number; s: number }
+  | { t: 'pong'; ts: number }
+  | { t: 'error'; code: 'pin' | 'version' | 'full'; msg: string }
 
 export const stateMessage = (s: PadState): ClientMessage => ({
   t: 's',

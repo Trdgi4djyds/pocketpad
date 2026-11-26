@@ -1,14 +1,14 @@
 import type { OutputType } from './protocol'
 
-// Catalogue des manettes : vraies photos (Wikimedia Commons, licences libres) détourées,
-// avec la position mesurée de chaque bouton sur la photo.
+// Catalogue des manettes : rendus studio neufs, vus parfaitement de face et détourés,
+// avec la position mesurée de chaque bouton sur l'image.
 
 const photos = import.meta.glob('./assets/controllers/*.webp', { eager: true, import: 'default' }) as Record<string, string>
 const asset = (name: string) => photos[`./assets/controllers/${name}.webp`]
 
-/** [x, y, r] — x et y en fraction de la largeur / hauteur de la photo, r en fraction de la largeur. */
+/** [x, y, r] — x et y en fraction de la largeur / hauteur de l'image, r en fraction de la largeur. */
 export type Spot = [number, number, number]
-/** [x, y, w, h] — centre et taille, en fractions de la photo. */
+/** [x, y, w, h] — centre et taille, en fractions de l'image. */
 export type Rect = [number, number, number, number]
 
 export interface Hotspots {
@@ -18,6 +18,7 @@ export interface Hotspots {
   x: Spot
   y: Spot
   dpad: Spot
+  /** Sticks : r = rayon exact du capuchon */
   ls?: Spot
   rs?: Spot
   back?: Spot
@@ -32,20 +33,21 @@ export type Glyphs = 'ps' | 'xbox' | 'nintendo' | 'gc' | 'snes'
 export interface Skin {
   id: string
   name: string
-  edition: string
-  description: string
   photo: string
   thumb: string
-  /** Rapport hauteur / largeur de la photo */
+  /** Rapport hauteur / largeur de l'image */
   ratio: number
   spots: Hotspots
-  /** Ambiance du studio photo dans l'interface */
+  /** Ambiance du studio dans l'interface */
   tone: 'light' | 'dark'
   /** Couleur d'accent (lueur, boutons actifs) */
   accent: string
   /** Couleur de fond du studio */
   studio: string
-  credit: { author: string; license: string; url: string }
+  /** Couleur de la pastille de sélection */
+  swatch: string
+  /** Teinte du puits sous les sticks (sinon déduite de l'ambiance) */
+  well?: string
 }
 
 export interface ControllerModel {
@@ -53,7 +55,6 @@ export interface ControllerModel {
   name: string
   family: string
   short: string
-  tagline: string
   glyphs: Glyphs
   out: OutputType
   labels: { back: string; start: string; guide: string; lb: string; rb: string; lt: string; rt: string }
@@ -81,52 +82,46 @@ export const CONTROLLERS: ControllerModel[] = [
     name: 'DualSense',
     family: 'PlayStation 5',
     short: 'PS5',
-    tagline: 'Retour haptique, gâchettes adaptatives et pavé tactile.',
     glyphs: 'ps',
     out: 'x360',
     labels: { back: 'Create', start: 'Options', guide: 'PS', lb: 'L1', rb: 'R1', lt: 'L2', rt: 'R2' },
     skins: [
-      skin('ds-black', 1265 / 1800, {
-        name: 'Midnight Black',
-        edition: 'Édition Midnight Black',
-        description: 'Deux noirs profonds, des touches gris lunaire et la barre lumineuse bleue autour du pavé tactile.',
-        tone: 'dark',
-        accent: '#5b8cff',
-        studio: '#16171d',
-        spots: {
-          a: p(82.0, 31.3, 3.3), b: p(88.9, 21.7, 3.3), x: p(74.7, 21.4, 3.3), y: p(81.4, 11.9, 3.3),
-          dpad: p(20.2, 20.6, 8.3), ls: p(35.3, 38.0, 5.8), rs: p(66.7, 38.0, 5.8),
-          back: p(27.6, 7.1, 1.8), start: p(73.6, 7.1, 1.8), guide: p(50.9, 38.8, 2.4), touchpad: rect(50.4, 13.4, 39.7, 24),
-        },
-        credit: { author: 'Chris Woodrich', license: 'CC BY-SA 4.0', url: 'https://commons.wikimedia.org/wiki/File:Playstation_5_DualSense_controller_in_Midnight_Black,_2026-02-07_(front).jpg' },
-      }),
-      skin('ds-white', 1219 / 1800, {
+      skin('ds-white', 884 / 1309, {
         name: 'Blanc',
-        edition: 'Édition standard',
-        description: 'La DualSense d\'origine : coque blanche bicolore, cœur noir laqué et touches translucides.',
         tone: 'light',
         accent: '#2f6bff',
-        studio: '#e7e8ec',
+        studio: '#e9eaee',
+        swatch: '#f4f5f7',
+        well: '#0b0b0e',
         spots: {
-          a: p(85.2, 38.1, 3.8), b: p(92.9, 26.3, 3.8), x: p(76.7, 25.8, 3.8), y: p(84.7, 14.0, 3.8),
-          dpad: p(14.3, 26.6, 9.4), ls: p(30.6, 50.4, 6.7), rs: p(69.7, 49.6, 6.7),
-          back: p(23.6, 8.2, 1.9), start: p(75.3, 7.7, 1.9), guide: p(50.0, 48.8, 2.6), touchpad: rect(49.2, 17.2, 43.9, 32),
+          a: p(80.5, 37.7, 3.0), b: p(87.3, 27.6, 3.0), x: p(73.5, 27.6, 3.0), y: p(80.5, 18.2, 3.0),
+          dpad: p(18.9, 27.6, 8.1), ls: p(34.1, 48.7, 5.8), rs: p(65.6, 48.7, 5.8),
+          back: p(27.1, 12.4, 1.6), start: p(72.7, 12.4, 1.6), guide: p(49.1, 47.4, 2.4), touchpad: rect(50, 18.8, 39, 27.9),
         },
-        credit: { author: 'Xephuwu', license: 'CC BY-SA 4.0', url: 'https://commons.wikimedia.org/wiki/File:KontrolerDualSense.jpg' },
       }),
-      skin('ds-pearl', 663 / 948, {
-        name: 'Chroma Pearl',
-        edition: 'Chroma Collection',
-        description: 'Une finition nacrée aux reflets irisés qui changent avec la lumière.',
-        tone: 'light',
-        accent: '#8f9bd6',
-        studio: '#e9eaf0',
+      skin('ds-black', 909 / 1408, {
+        name: 'Midnight Black',
+        tone: 'dark',
+        accent: '#5b8cff',
+        studio: '#14151b',
+        swatch: '#202127',
         spots: {
-          a: p(81.7, 31.8, 3.4), b: p(88.9, 21.9, 3.4), x: p(74.2, 21.8, 3.4), y: p(82.0, 11.9, 3.4),
-          dpad: p(18.3, 21.5, 8.0), ls: p(32.2, 40.5, 5.8), rs: p(66.4, 40.5, 5.8),
-          back: p(26.4, 7.2, 1.8), start: p(73.3, 7.2, 1.8), guide: p(50.2, 40.5, 2.4), touchpad: rect(50.3, 13.4, 39.4, 25.7),
+          a: p(80.0, 39.4, 3.1), b: p(86.8, 28.5, 3.1), x: p(72.9, 28.5, 3.1), y: p(80.0, 18.0, 3.1),
+          dpad: p(20.0, 28.2, 7.7), ls: p(34.4, 48.6, 5.6), rs: p(65.6, 48.6, 5.6),
+          back: p(27.5, 12.3, 1.6), start: p(72.5, 12.3, 1.6), guide: p(49.8, 47.9, 2.4), touchpad: rect(50, 19.6, 39, 28.5),
         },
-        credit: { author: 'Sonson2', license: 'CC BY-SA 4.0', url: 'https://commons.wikimedia.org/wiki/File:DualSense_Controller_Chroma_Pearl.jpg' },
+      }),
+      skin('ds-red', 907 / 1358, {
+        name: 'Cosmic Red',
+        tone: 'dark',
+        accent: '#ff3b5c',
+        studio: '#1a0c10',
+        swatch: '#b8142f',
+        spots: {
+          a: p(80.2, 37.1, 3.0), b: p(87.1, 26.9, 3.0), x: p(73.3, 26.9, 3.0), y: p(80.2, 16.6, 3.0),
+          dpad: p(19.7, 26.9, 7.9), ls: p(34.3, 47.9, 5.6), rs: p(65.6, 47.9, 5.6),
+          back: p(27.3, 12.2, 1.6), start: p(72.7, 12.2, 1.6), guide: p(49.8, 46.3, 2.4), touchpad: rect(50, 18.8, 39, 28),
+        },
       }),
     ],
   },
@@ -135,64 +130,83 @@ export const CONTROLLERS: ControllerModel[] = [
     name: 'DualShock 4',
     family: 'PlayStation 4',
     short: 'PS4',
-    tagline: 'L\'iconique : pavé tactile cliquable et barre lumineuse.',
     glyphs: 'ps',
     out: 'x360',
     labels: { back: 'Share', start: 'Options', guide: 'PS', lb: 'L1', rb: 'R1', lt: 'L2', rt: 'R2' },
     skins: [
-      skin('ds4-black', 1165 / 1800, {
+      skin('ds4-black', 893 / 1444, {
         name: 'Jet Black',
-        edition: 'Édition standard',
-        description: 'Le noir original, texture granitée et symboles colorés d\'époque.',
         tone: 'dark',
         accent: '#3b82f6',
-        studio: '#141519',
+        studio: '#131418',
+        swatch: '#1d1e22',
         spots: {
-          a: p(81.7, 34.0, 3.4), b: p(88.6, 23.2, 3.4), x: p(73.9, 22.9, 3.4), y: p(81.7, 11.2, 3.4),
-          dpad: p(18.0, 22.9, 8.0), ls: p(33.9, 43.0, 6.1), rs: p(63.9, 42.6, 6.1),
-          back: p(29.4, 8.6, 1.8), start: p(70.2, 8.6, 1.8), guide: p(49.8, 45.2, 2.4), touchpad: rect(50, 15.9, 33.4, 25),
+          a: p(80.6, 40.9, 3.2), b: p(87.8, 29.4, 3.2), x: p(73.5, 29.4, 3.2), y: p(80.7, 17.9, 3.2),
+          dpad: p(19.3, 29.4, 8.2), ls: p(34.3, 50.6, 6.0), rs: p(65.6, 50.6, 6.0),
+          back: p(29.3, 14.3, 1.8), start: p(70.5, 14.3, 1.8), guide: p(49.8, 51.8, 2.5), touchpad: rect(49.8, 20.6, 32.7, 28),
         },
-        credit: { author: 'ITEagle Europe - Sebastiaan Broekhoven', license: 'CC BY-SA 4.0', url: 'https://commons.wikimedia.org/wiki/File:Sony_DualShock_4_wireless_controller_for_PlayStation_4_(black)_-_top_view.jpg' },
+      }),
+      skin('ds4-white', 952 / 1483, {
+        name: 'Glacier White',
+        tone: 'light',
+        accent: '#2563eb',
+        studio: '#e8e9ed',
+        swatch: '#eef0f3',
+        well: '#4f525a',
+        spots: {
+          a: p(80.3, 40.1, 3.2), b: p(87.7, 28.9, 3.2), x: p(73.0, 28.9, 3.2), y: p(80.3, 17.3, 3.2),
+          dpad: p(19.5, 28.9, 8.2), ls: p(34.5, 49.6, 6.1), rs: p(65.5, 49.6, 6.1),
+          back: p(30.3, 14.2, 1.8), start: p(69.8, 14.2, 1.8), guide: p(49.8, 50.3, 2.5), touchpad: rect(50, 20.4, 32.4, 26.6),
+        },
       }),
     ],
   },
   {
     id: 'xbox',
     name: 'Xbox Wireless',
-    family: 'Xbox Series X|S · One',
+    family: 'Xbox Series X|S',
     short: 'Xbox',
-    tagline: 'L\'ergonomie de référence sur PC, reconnue partout.',
     glyphs: 'xbox',
     out: 'x360',
     labels: { back: 'View', start: 'Menu', guide: 'Xbox', lb: 'LB', rb: 'RB', lt: 'LT', rt: 'RT' },
     skins: [
-      skin('xb-series-black', 1301 / 1800, {
+      skin('xb-carbon', 917 / 1304, {
         name: 'Carbon Black',
-        edition: 'Xbox Series X|S',
-        description: 'Surface texturée antidérapante, croix hybride et bouton Partager.',
         tone: 'dark',
         accent: '#22c55e',
-        studio: '#131416',
+        studio: '#121315',
+        swatch: '#24262a',
         spots: {
-          a: p(80.9, 36.6, 3.3), b: p(87.2, 27.4, 3.3), x: p(73.6, 26.9, 3.3), y: p(80.2, 16.6, 3.3),
-          dpad: p(38.9, 52.3, 7.8), ls: p(23.7, 26.5, 6.1), rs: p(68.3, 50.0, 6.1),
-          back: p(45.0, 26.5, 2.2), start: p(61.1, 26.5, 2.2), guide: p(52.8, 11.5, 4.0), capture: p(53.3, 35.1, 2.0),
+          a: p(75.7, 38.2, 3.4), b: p(82.4, 28.7, 3.4), x: p(69.1, 28.7, 3.4), y: p(75.7, 19.1, 3.4),
+          dpad: p(36.5, 51.0, 7.7), ls: p(24.5, 27.9, 5.9), rs: p(62.5, 49.6, 5.9),
+          back: p(42.4, 28.2, 2.2), start: p(57.5, 28.2, 2.2), guide: p(49.8, 14.5, 3.8), capture: p(49.9, 36.3, 2.0),
         },
-        credit: { author: 'uKER', license: 'CC BY-SA 4.0', url: 'https://commons.wikimedia.org/wiki/File:Xbox_Series_Controller_Carbon_Black.jpg' },
       }),
-      skin('xb-phantom-white', 1264 / 1800, {
-        name: 'Phantom White',
-        edition: 'Xbox One · Édition spéciale',
-        description: 'Coque translucide dégradée qui laisse deviner l\'intérieur de la manette.',
+      skin('xb-robot', 873 / 1262, {
+        name: 'Robot White',
         tone: 'light',
         accent: '#16a34a',
-        studio: '#e6e7ea',
+        studio: '#e7e8eb',
+        swatch: '#f3f4f6',
+        well: '#8a8e96',
         spots: {
-          a: p(76.7, 32.3, 3.3), b: p(83.1, 22.8, 3.3), x: p(69.8, 22.0, 3.3), y: p(76.1, 12.2, 3.3),
-          dpad: p(36.7, 46.5, 8.2), ls: p(24.4, 19.6, 6.3), rs: p(64.4, 40.2, 6.0),
-          back: p(42.8, 22.0, 2.1), start: p(57.8, 22.0, 2.1), guide: p(50.0, 10.1, 3.6),
+          a: p(76.2, 38.9, 3.6), b: p(83.0, 29.6, 3.6), x: p(69.2, 28.9, 3.6), y: p(76.2, 19.4, 3.6),
+          dpad: p(36.4, 51.0, 7.9), ls: p(24.1, 28.4, 5.9), rs: p(62.5, 50.1, 6.0),
+          back: p(42.9, 28.3, 2.2), start: p(57.3, 28.3, 2.2), guide: p(50, 14.5, 3.9), capture: p(50, 35.7, 2.0),
         },
-        credit: { author: 'Luzankia', license: 'CC BY-SA 4.0', url: 'https://commons.wikimedia.org/wiki/File:Xbox_One_Controller,_Phantom_White.jpg' },
+      }),
+      skin('xb-shock', 906 / 1328, {
+        name: 'Shock Blue',
+        tone: 'dark',
+        accent: '#3b82f6',
+        studio: '#0a1330',
+        swatch: '#1f5fd6',
+        well: '#0b1430',
+        spots: {
+          a: p(75.7, 38.7, 3.5), b: p(82.5, 29.1, 3.5), x: p(68.9, 28.8, 3.5), y: p(75.7, 19.3, 3.5),
+          dpad: p(36.8, 50.7, 7.6), ls: p(24.5, 27.7, 5.9), rs: p(62.4, 49.9, 6.0),
+          back: p(42.5, 28.0, 2.2), start: p(57.1, 28.0, 2.2), guide: p(49.8, 14.4, 3.8), capture: p(49.8, 35.7, 2.0),
+        },
       }),
     ],
   },
@@ -201,38 +215,21 @@ export const CONTROLLERS: ControllerModel[] = [
     name: 'Pro Controller',
     family: 'Nintendo Switch',
     short: 'Switch',
-    tagline: 'Poignées pleines, gyroscope et disposition Nintendo.',
     glyphs: 'nintendo',
     out: 'x360',
     labels: { back: '−', start: '+', guide: 'Home', lb: 'L', rb: 'R', lt: 'ZL', rt: 'ZR' },
     skins: [
-      skin('sw-black', 1282 / 1800, {
+      skin('sw-black', 915 / 1323, {
         name: 'Noir fumé',
-        edition: 'Édition standard',
-        description: 'La coque noire translucide qui dévoile l\'électronique, poignées texturées.',
         tone: 'dark',
         accent: '#e60012',
         studio: '#121317',
+        swatch: '#2b2c31',
         spots: {
-          a: p(76.1, 33.5, 3.9), b: p(84.4, 23.1, 3.9), x: p(66.3, 23.4, 3.9), y: p(75.0, 13.3, 3.9),
-          dpad: p(28.3, 45.2, 8.7), ls: p(16.1, 25.7, 7.0), rs: p(60.0, 46.8, 7.0),
-          back: p(32.8, 15.3, 2.2), start: p(58.9, 13.7, 2.2), guide: p(53.1, 25.0, 2.4), capture: p(38.1, 25.0, 2.1),
+          a: p(76.2, 38.9, 3.5), b: p(83.5, 29.7, 3.5), x: p(68.8, 29.3, 3.5), y: p(76.2, 20.0, 3.5),
+          dpad: p(35.9, 48.0, 7.3), ls: p(23.4, 28.4, 6.0), rs: p(63.4, 48.2, 6.0),
+          back: p(38.0, 18.8, 2.3), start: p(62.1, 18.8, 2.3), guide: p(56.4, 30.0, 2.6), capture: p(43.2, 29.7, 2.2),
         },
-        credit: { author: 'Tim Whitehouse', license: 'CC0', url: 'https://commons.wikimedia.org/wiki/File:Nintendo.Swtich.Pro.Controller.Black.jpg' },
-      }),
-      skin('sw-zelda', 1294 / 1800, {
-        name: 'Tears of the Kingdom',
-        edition: 'Édition Zelda',
-        description: 'Gravures dorées de Hyrule et poignée droite blanche, une pièce de collection.',
-        tone: 'dark',
-        accent: '#d8b45a',
-        studio: '#17150f',
-        spots: {
-          a: p(77.4, 34.5, 3.9), b: p(85.3, 25.2, 3.9), x: p(69.1, 25.2, 3.9), y: p(77.4, 15.5, 3.9),
-          dpad: p(32.8, 43.7, 8.3), ls: p(19.8, 22.9, 7.0), rs: p(63.1, 46.1, 7.0),
-          back: p(37.2, 15.9, 2.2), start: p(62.4, 15.9, 2.2), guide: p(57.2, 24.9, 2.4), capture: p(42.6, 25.2, 2.1),
-        },
-        credit: { author: 'TaurusEmerald', license: 'CC BY-SA 4.0', url: 'https://commons.wikimedia.org/wiki/File:Nintendo_Switch_Pro_Controller_Zelda.jpg' },
       }),
     ],
   },
@@ -241,63 +238,22 @@ export const CONTROLLERS: ControllerModel[] = [
     name: 'GameCube',
     family: 'Nintendo GameCube',
     short: 'GameCube',
-    tagline: 'Le grand bouton A, le C-stick et des gâchettes analogiques.',
     glyphs: 'gc',
     out: 'x360',
     labels: { back: '', start: 'Start', guide: '', lb: '', rb: 'Z', lt: 'L', rt: 'R' },
     noLB: true,
     skins: [
-      skin('gc-indigo', 1278 / 1515, {
+      skin('gc-indigo', 912 / 1256, {
         name: 'Indigo',
-        edition: 'Coloris d\'origine',
-        description: 'Le violet indigo culte de 2001, avec son dessous translucide.',
         tone: 'dark',
-        accent: '#7c6cf0',
+        accent: '#8b7cf6',
         studio: '#15132a',
+        swatch: '#4b3fa8',
+        well: '#1b1546',
         spots: {
-          a: p(79.7, 36.9, 5.8), b: p(90.2, 34.0, 3.4), x: p(68.6, 43.5, 3.7), y: p(76.7, 24.4, 3.5),
-          dpad: p(32.8, 61.9, 6.2), ls: p(19.1, 35.3, 7.0), rs: p(65.6, 63.2, 6.0), start: p(49.4, 38.2, 2.2),
+          a: p(78.0, 34.0, 5.9), b: p(88.2, 31.5, 3.6), x: p(67.3, 40.9, 3.5), y: p(75.1, 19.4, 3.8),
+          dpad: p(34.4, 61.0, 6.6), ls: p(21.6, 32.5, 6.2), rs: p(65.1, 61.7, 5.2), start: p(49.9, 33.2, 2.5),
         },
-        credit: { author: 'Evan-Amos / Alphathon', license: 'CC BY-SA 3.0', url: 'https://commons.wikimedia.org/wiki/File:GameCube_controller.png' },
-      }),
-      skin('gc-orange', 735 / 975, {
-        name: 'Spice Orange',
-        edition: 'Édition limitée',
-        description: 'L\'orange épicé, rareté japonaise devenue l\'emblème des collectionneurs.',
-        tone: 'light',
-        accent: '#f08a24',
-        studio: '#efe6dc',
-        spots: {
-          a: p(79.4, 24.3, 5.8), b: p(89.8, 21.4, 3.4), x: p(68.9, 30.2, 3.7), y: p(76.4, 11.8, 3.5),
-          dpad: p(33.3, 50.9, 6.1), ls: p(19.4, 22.9, 7.0), rs: p(66.7, 48.7, 6.0), start: p(49.7, 27.3, 2.2),
-        },
-        credit: { author: 'Monathephantom', license: 'CC BY-SA 4.0', url: 'https://commons.wikimedia.org/wiki/File:GameCube_Controller_in_Orange_(Transparent)_01.png' },
-      }),
-      skin('gc-turquoise', 951 / 1295, {
-        name: 'Emerald Blue',
-        edition: 'Édition Japon',
-        description: 'Le bleu émeraude, sorti uniquement au Japon.',
-        tone: 'dark',
-        accent: '#14b8a6',
-        studio: '#0e1c1d',
-        spots: {
-          a: p(82.8, 37.5, 6.0), b: p(93.3, 33.3, 3.4), x: p(71.3, 46.1, 3.9), y: p(79.2, 21.9, 3.6),
-          dpad: p(33.9, 71.1, 6.8), ls: p(17.8, 40.5, 7.4), rs: p(68.3, 69.6, 6.4), start: p(50.9, 38.6, 2.3),
-        },
-        credit: { author: 'Monathephantom', license: 'CC BY-SA 4.0', url: 'https://commons.wikimedia.org/wiki/File:Gamecube_Controller_in_Turquoise_(Transparent).png' },
-      }),
-      skin('gc-smash', 495 / 589, {
-        name: 'Smash Bros. Ultimate',
-        edition: 'Édition spéciale',
-        description: 'Noir satiné frappé du logo Smash, la référence des tournois.',
-        tone: 'dark',
-        accent: '#ef4444',
-        studio: '#141416',
-        spots: {
-          a: p(82.0, 37.8, 6.2), b: p(93.1, 36.1, 3.4), x: p(70.2, 46.3, 3.9), y: p(78.3, 25.5, 3.6),
-          dpad: p(32.0, 65.2, 7.0), ls: p(18.0, 38.8, 7.3), rs: p(67.6, 65.9, 6.6), start: p(49.8, 40.1, 2.4),
-        },
-        credit: { author: 'Monathephantom', license: 'CC BY-SA 4.0', url: 'https://commons.wikimedia.org/wiki/File:Super_Smash_Bros_Ultimate_GameCube_Controller_(Transparent)_01.png' },
       }),
     ],
   },
@@ -306,37 +262,21 @@ export const CONTROLLERS: ControllerModel[] = [
     name: 'Super Nintendo',
     family: 'Super Nintendo',
     short: 'SNES',
-    tagline: 'La croix, quatre boutons et deux tranches : l\'essentiel.',
     glyphs: 'snes',
     out: 'x360',
     labels: { back: 'Select', start: 'Start', guide: '', lb: 'L', rb: 'R', lt: '', rt: '' },
     noTriggers: true,
     skins: [
-      skin('snes-pal', 685 / 1391, {
-        name: 'Super Nintendo',
-        edition: 'Version européenne',
-        description: 'Le gris PAL et les quatre couleurs iconiques, comme en 1992.',
+      skin('snes-pal', 628 / 1403, {
+        name: 'Gris PAL',
         tone: 'light',
         accent: '#e43d4f',
         studio: '#e4e3df',
+        swatch: '#c9c9cc',
         spots: {
-          a: p(78.9, 70.4, 3.8), b: p(88.3, 55.1, 3.8), x: p(69.1, 55.1, 3.8), y: p(78.9, 40.4, 3.8),
-          dpad: p(21.1, 55.8, 8.9), back: p(40.9, 61.9, 3.0), start: p(51.7, 61.9, 3.0),
+          a: p(78.9, 70.1, 3.6), b: p(87.3, 54.1, 3.6), x: p(70.5, 54.1, 3.6), y: p(78.9, 38.2, 3.6),
+          dpad: p(20.5, 53.5, 8.2), back: p(41.8, 56.3, 3.0), start: p(52.5, 56.3, 3.0),
         },
-        credit: { author: 'Skia', license: 'CC BY 2.5', url: 'https://commons.wikimedia.org/wiki/File:SNES_Controller.jpg' },
-      }),
-      skin('snes-us', 890 / 1800, {
-        name: 'Super NES',
-        edition: 'Version américaine',
-        description: 'Les boutons violet lavande de l\'édition nord-américaine.',
-        tone: 'light',
-        accent: '#6d5bd0',
-        studio: '#e6e5ea',
-        spots: {
-          a: p(78.7, 71.5, 3.8), b: p(88.3, 56.6, 3.8), x: p(69.1, 57.3, 3.8), y: p(78.7, 42.2, 3.8),
-          dpad: p(20.9, 57.3, 8.9), back: p(40.6, 62.9, 3.0), start: p(51.4, 62.9, 3.0),
-        },
-        credit: { author: 'Evan-Amos', license: 'Domaine public', url: 'https://commons.wikimedia.org/wiki/File:SNES-Controller-Flat.jpg' },
       }),
     ],
   },

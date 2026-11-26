@@ -3,12 +3,17 @@ const assert = require('assert')
 const path = require('path')
 const http = require('http')
 const WebSocket = require('ws')
-const { createHubServer, isPrivate } = require('../src/server.cjs')
+const { createHubServer, isPrivate, guessModel } = require('../src/server.cjs')
 const { BTN } = require('../src/protocol.cjs')
+const { parseReport } = require('../src/bt-bridge.cjs')
 
 const applied = []
 const pads = []
 const logs = []
+const launched = []
+const moves = []
+const clicks = []
+let streamerWanted = 0
 const hub = createHubServer({
   staticDir: process.env.STATIC_DIR || path.join(__dirname, '..', '..', 'out'),
   pin: '1234',
@@ -20,6 +25,22 @@ const hub = createHubServer({
   },
   log: (m) => logs.push(m),
   onChange: () => {},
+  games: {
+    list: async () => [{ id: 'steam:271590', name: 'Grand Theft Auto V', source: 'steam', art: 'x.jpg' }],
+    launch: async (id) => {
+      launched.push(id)
+      return { ok: true }
+    },
+  },
+  ensureStreamer: () => streamerWanted++,
+  input: {
+    available: () => true,
+    move: (dx, dy) => moves.push([dx, dy]),
+    button: (w, d) => clicks.push([w, d]),
+    wheel: () => {},
+    key: () => {},
+    VK: { RETURN: 13, ESCAPE: 27, LWIN: 91 },
+  },
 })
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms))
@@ -39,7 +60,7 @@ function client(port) {
   return new Promise((res, rej) => ws.on('open', () => res(ws)).on('error', rej))
 }
 const hello = (ws, extra = {}) => ws.send(JSON.stringify({ t: 'hello', v: 1, name: 'Alex', model: 'dualsense', skin: 'vice-night', out: 'x360', via: 'usb', ...extra }))
-const get = (port, p) => new Promise((res) => http.get(`http://127.0.0.1:${port}${p}`, (r) => { let b = ''; r.on('data', (c) => (b += c)).on('end', () => res({ status: r.statusCode, body: b })) }))
+const get = (port, p) => new Promise((res) => http.get(`http://127.0.0.1:${port}${p}`, (r) => { let b = ''; r.on('data', (c) => (b += c)).on('end', () => res({ status: r.statusCode, body: b, headers: r.headers })) }))
 
 ;(async () => {
   const port = await hub.start(47890)
@@ -143,6 +164,145 @@ const get = (port, p) => new Promise((res) => http.get(`http://127.0.0.1:${port}
     assert.equal(isPrivate('82.64.10.1'), false)
   })
 
+  await check('vibration d\'essai envoyée au téléphone', async () => {
+    const p = hub.players().find((x) => x.slot === 1)
+    a.inbox.length = 0
+    hub.testRumble(p.id)
+    const r = await a.next('rumble')
+    assert.equal(r.l, 255)
+    const stop = await a.next('rumble', 1500)
+    assert.equal(stop.l, 0)
+  })
+
+  // Libère les emplacements pour les tests de la TV
+  for (const c of others) c.close()
+  a.close()
+  await wait(150)
+
+  await check('découverte : /pocketpad.json lisible depuis une autre origine', async () => {
+    const r = await get(port, '/pocketpad.json')
+    assert.equal(r.headers['access-control-allow-origin'], '*')
+    const j = JSON.parse(r.body)
+    assert.equal(j.name, 'TEST-PC')
+    assert.equal(j.stream, true)
+  })
+
+  const tv = await client(port)
+  await check('accueille l\'application TV et envoie la bibliothèque', async () => {
+    tv.send(JSON.stringify({ t: 'viewer', v: 1, name: 'Salon TV' }))
+    const h = await tv.next('hub')
+    assert.equal(h.name, 'TEST-PC')
+    tv.send(JSON.stringify({ t: 'games' }))
+    const g = await tv.next('games')
+    assert.equal(g.list[0].name, 'Grand Theft Auto V')
+    assert.equal(hub.viewers()[0].name, 'Salon TV')
+  })
+
+  await check('lance un jeu depuis la TV', async () => {
+    tv.send(JSON.stringify({ t: 'launch', id: 'steam:271590' }))
+    const r = await tv.next('launched')
+    assert.equal(r.ok, true)
+    assert.deepEqual(launched, ['steam:271590'])
+  })
+
+  await check('demande la diffusion et prépare le diffuseur', async () => {
+    tv.send(JSON.stringify({ t: 'watch', preset: 'smooth', mode: 'game' }))
+    await wait(50)
+    assert.equal(streamerWanted > 0, true)
+    assert.equal(hub.viewers()[0].watching, true)
+    assert.equal(hub.viewers()[0].preset, 'smooth')
+  })
+
+  const streamer = await client(port)
+  let viewerId
+  await check('relaie la signalisation WebRTC entre PC et TV', async () => {
+    streamer.send(JSON.stringify({ t: 'streamer', v: 1 }))
+    const w = await streamer.next('watch')
+    viewerId = w.viewer
+    assert.equal(w.preset, 'smooth')
+    streamer.send(JSON.stringify({ t: 'sig', to: viewerId, data: { sdp: { type: 'offer', sdp: 'v=0' } } }))
+    assert.equal((await tv.next('sig')).data.sdp.type, 'offer')
+    tv.send(JSON.stringify({ t: 'sig', data: { ice: { candidate: 'candidate:1' } } }))
+    const back = await streamer.next('sig')
+    assert.equal(back.from, viewerId)
+    assert.equal(back.data.ice.candidate, 'candidate:1')
+  })
+
+  await check('affiche les statistiques de diffusion', async () => {
+    streamer.send(JSON.stringify({ t: 'stats', viewer: viewerId, stats: { w: 1280, h: 720, fps: 60, kbps: 7000, rtt: 8, loss: 0, codec: 'H264' } }))
+    await wait(50)
+    assert.equal(hub.viewers()[0].stats.h, 720)
+  })
+
+  await check('manette de la TV → manette Xbox 360 virtuelle', async () => {
+    streamer.send(JSON.stringify({ t: 'tvpad', viewer: viewerId, i: 0, name: 'Xbox Wireless Controller', b: BTN.A, lx: 0.4, ly: 0, rx: 0, ry: 0, lt: 0, rt: 1 }))
+    await wait(50)
+    const p = hub.players().find((x) => x.transport === 'tv')
+    assert.ok(p)
+    assert.equal(p.model, 'xbox')
+    assert.equal(p.address, 'Salon TV')
+    assert.equal(applied.at(-1).s.b, BTN.A)
+    assert.equal(applied.at(-1).s.rt, 1)
+  })
+
+  await check('vibrations du jeu renvoyées à la manette de la TV', async () => {
+    pads.at(-1).onRumble(120, 60)
+    const r = await tv.next('rumble')
+    assert.deepEqual([r.i, r.l, r.s], [0, 120, 60])
+  })
+
+  await check('repli WebSocket et débranchement d\'une manette TV', async () => {
+    tv.send(JSON.stringify({ t: 'tvpad', i: 1, name: 'DualSense Wireless Controller', b: 0, lx: 0, ly: 0, rx: 0, ry: 0, lt: 0, rt: 0 }))
+    await wait(50)
+    assert.equal(hub.players().filter((x) => x.transport === 'tv').length, 2)
+    assert.equal(hub.players().find((x) => x.model === 'dualsense').transport, 'tv')
+    tv.send(JSON.stringify({ t: 'tvpad-off', i: 1 }))
+    await wait(50)
+    assert.equal(hub.players().filter((x) => x.transport === 'tv').length, 1)
+  })
+
+  await check('mode bureau : la manette de la TV pilote la souris', async () => {
+    tv.send(JSON.stringify({ t: 'mode', mode: 'desktop' }))
+    assert.equal((await streamer.next('mode')).mode, 'desktop')
+    streamer.send(JSON.stringify({ t: 'tvpad', viewer: viewerId, i: 0, name: 'Xbox', b: BTN.A, lx: 1, ly: 0, rx: 0, ry: 0, lt: 0, rt: 0 }))
+    await wait(120)
+    assert.ok(moves.length > 0 && moves.some(([dx]) => dx > 0))
+    assert.deepEqual(clicks[0], ['left', true])
+    assert.equal(hub.players().filter((x) => x.transport === 'tv').length, 0)
+  })
+
+  await check('fin de diffusion quand la TV se déconnecte', async () => {
+    tv.close()
+    const l = await streamer.next('left')
+    assert.equal(l.viewer, viewerId)
+    await wait(50)
+    assert.equal(hub.viewers().length, 0)
+    assert.equal(clicks.at(-1)[1], false)
+  })
+
+  await check('relais Bluetooth : rapport HID rejoué en Xbox 360', async () => {
+    const s = parseReport(Buffer.from([1, 0x01 | 0x08, 0x00, 2, 255, 0, 128, 128, 0, 255]))
+    assert.equal((s.b & BTN.A) !== 0 && (s.b & BTN.Y) !== 0 && (s.b & BTN.DPAD_RIGHT) !== 0, true)
+    assert.equal(s.lx, 1)
+    assert.equal(s.ly, 1)
+    assert.equal(s.rt, 1)
+    hub.attachExternal('bt1', 'PocketPad')
+    hub.updateExternal('bt1', s)
+    const p = hub.players().find((x) => x.transport === 'bluetooth')
+    assert.ok(p)
+    assert.equal(applied.at(-1).s.b, s.b)
+    hub.detachExternal('bt1')
+    assert.equal(hub.players().some((x) => x.transport === 'bluetooth'), false)
+  })
+
+  await check('reconnaît le modèle des manettes de la TV', () => {
+    assert.equal(guessModel('Wireless Controller').model, 'dualshock4')
+    assert.equal(guessModel('DualSense Wireless Controller').model, 'dualsense')
+    assert.equal(guessModel('Pro Controller').model, 'switchpro')
+    assert.equal(guessModel('Xbox Wireless Controller').model, 'xbox')
+  })
+
+  streamer.close()
   hub.stop()
   console.log(`\n${ok} tests réussis`)
   process.exit(0)

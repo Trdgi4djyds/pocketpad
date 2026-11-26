@@ -1,8 +1,8 @@
 {
   "name": "pocketpad-hub",
   "productName": "PocketPad Hub",
-  "version": "1.0.1",
-  "description": "PocketPad Hub — transforme votre téléphone en manette PC (USB, Wi-Fi, Internet).",
+  "version": "1.1.0",
+  "description": "PocketPad Hub — transforme votre téléphone en manette PC et diffuse vos jeux sur la TV.",
   "author": "PocketPad",
   "license": "MIT",
   "main": "main.cjs",
@@ -17,7 +17,9 @@
     "ws": "^8.18.0"
   },
   "optionalDependencies": {
-    "vigemclient": "^1.5.3"
+    "vigemclient": "^1.5.3",
+    "node-hid": "^3.1.2",
+    "koffi": "^2.16.0"
   },
   "devDependencies": {
     "electron": "^45.0.0",
@@ -36,10 +38,15 @@
       "preload.cjs",
       "src/**/*",
       "app/**/*",
-      "package.json"
+      "package.json",
+      "!node_modules/koffi/build/koffi/!(win32_x64)/**",
+      "!node_modules/koffi/src/**",
+      "!node_modules/koffi/doc/**"
     ],
     "asarUnpack": [
-      "node_modules/vigemclient/**/*"
+      "node_modules/vigemclient/**/*",
+      "node_modules/node-hid/**/*",
+      "node_modules/koffi/**/*"
     ],
     "extraResources": [
       {

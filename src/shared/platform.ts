@@ -1,10 +1,12 @@
 import { Capacitor } from '@capacitor/core'
-import type { HubApi } from '../pc/types'
+import type { HubApi, StreamApi } from '../pc/types'
 
 declare global {
   interface Window {
     /** Exposé par le preload Electron de PocketPad Hub */
     pocketpadHub?: HubApi
+    /** Fenêtre de diffusion cachée du Hub */
+    pocketpadStream?: StreamApi
     /** Injecté par le serveur du Hub quand la manette est ouverte dans le navigateur du téléphone */
     __POCKETPAD_HUB__?: { port: number; name: string }
   }
