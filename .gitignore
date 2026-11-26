@@ -1,7 +1,33 @@
-__pycache__/
-*.pyc
-*.egg-info/
-build/
+node_modules/
 dist/
-.venv/
-.pytest_cache/
+build/
+.cache/
+.env*
+.vite/
+vite.config.*.timestamp-*
+*.tsbuildinfo
+*-debug.log*
+logs/
+*.log
+.claude-replay.*
+.tmp-*
+/.figma/design-context/
+
+# Platform-managed agentplat state, not project source. In the
+# client-initiated single-repo workspace layout (make's `Path: "."` spec) the
+# repo root IS the workspace root, so these land inside this repo rather than
+# beside it.
+/.plugins/
+/.opencode-skills/
+
+# Secrets locaux - ne jamais commiter
+token_acces_key.txt
+*.keystore
+*.jks
+
+# PocketPad — sous-projets
+!desktop/build/
+desktop/app/
+desktop/vendor/
+desktop/release/
+out/

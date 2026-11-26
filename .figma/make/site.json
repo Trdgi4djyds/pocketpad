@@ -1,0 +1,12 @@
+{
+  "description": "Transformez votre téléphone en manette PC : DualSense, DualShock 4, Xbox, Switch Pro, GameCube et Rétro, par câble USB, Wi-Fi, Internet ou Bluetooth.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  },
+  "title": "PocketPad — manette portable pour PC",
+  "language": "fr"
+}

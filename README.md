@@ -1,73 +1,109 @@
-# 🎮 PocketPad
+# PocketPad
 
-**Transforme ton smartphone en manette pour jeux PC.** Une manette Xbox 360 virtuelle est créée sur ton ordinateur ; ton téléphone (navigateur, rien à installer) envoie les entrées en temps réel : sticks analogiques, croix directionnelle, A/B/X/Y, LB/RB, LT/RT, Start/Back/Guide, retour de vibration.
+**Deux logiciels qui fonctionnent ensemble pour jouer à vos jeux PC avec votre téléphone :**
 
-| Mode | Comment ça marche | Latence |
-|---|---|---|
-| 🔌 **Câble USB** | `adb reverse` : le téléphone parle au PC par le câble (Android) ou via le partage de connexion USB | la plus basse |
-| 📶 **Wi-Fi / Ethernet** | Le téléphone ouvre le lien affiché (ou le QR code) sur le même réseau | très basse |
-| 🔵 **Bluetooth** | Via le partage de connexion Bluetooth (PAN) : le PC et le téléphone forment un réseau, même lien | basse |
-| 🌍 **Internet** | Un petit relais (`pocketpad-relay`) sur un VPS met en relation PC et téléphone, sans ouvrir de port | dépend du réseau |
+| Appareil | Logiciel | Rôle |
+| --- | --- | --- |
+| Téléphone | **PocketPad** — APK Android | Transforme le téléphone en manette. Vous choisissez une vraie manette (photos réelles) et vous jouez en tactile. |
+| PC | **PocketPad Hub** — logiciel PC Windows (installable) | Reçoit les téléphones par câble USB, Wi-Fi ou Internet et crée de vraies manettes Xbox 360 / DualShock 4 que les jeux reconnaissent. |
 
-## Installation
+En Bluetooth, le téléphone est directement reconnu par Windows comme une manette, sans logiciel PC.
+
+![Application Android](docs/screenshots/03-apk-dualsense.jpg)
+
+## Téléchargement
+
+**[Dernière version](https://github.com/Trdgi4djyds/pocketpad/releases/latest)** — compilée automatiquement par GitHub Actions.
+
+| Fichier | À installer sur |
+| --- | --- |
+| `PocketPad-Android.apk` | le téléphone (Android 7+, mode Bluetooth : Android 9+) |
+| `PocketPad-Hub-Setup-1.0.0.exe` | le PC Windows 10/11 — installateur (propose le pilote ViGEmBus) |
+| `PocketPad-Hub-Portable-1.0.0.exe` | le PC Windows — version portable |
+
+## L'application Android (la manette)
+
+De vraies photos de manettes, détourées, sur lesquelles chaque zone tactile correspond au bouton réel :
+
+| Vitrine | En jeu |
+| --- | --- |
+| ![GameCube Spice Orange](docs/screenshots/04-apk-gamecube.jpg) | ![DualSense en jeu](docs/screenshots/05-apk-jeu-dualsense.jpg) |
+| ![Xbox Phantom White](docs/screenshots/09-apk-xbox.jpg) | ![Pro Controller Zelda en jeu](docs/screenshots/06-apk-jeu-switch.jpg) |
+
+- **6 manettes, 14 coloris réels** : DualSense (Midnight Black, Blanc, Chroma Pearl), DualShock 4, Xbox Wireless (Series Carbon Black, One Phantom White), Pro Controller Switch (Noir, Zelda), GameCube (Indigo, Spice Orange, Emerald Blue, Smash Bros.), Super Nintendo (PAL, US).
+- **Multi-touch** : sticks analogiques dont le capuchon suit le doigt, clic L3/R3 par pression brève, croix 8 directions, glissement d'un bouton à l'autre, gâchettes et tranches, pavé tactile, vibrations.
+- **Connexion** : câble USB, Wi-Fi, Internet (code PIN) ou Bluetooth HID.
+
+![Connexion](docs/screenshots/10-apk-connexion.jpg)
+
+## Le logiciel PC (PocketPad Hub)
+
+![PocketPad Hub — joueurs](docs/screenshots/07-pc-joueurs.jpg)
+
+- Jusqu'à **4 joueurs**, chacun affiché avec sa manette et **ses boutons en direct**.
+- **Vraie manette Windows** via le pilote ViGEmBus : Xbox 360 (XInput) ou DualShock 4, au choix par joueur.
+- **USB automatique** : le Hub embarque ADB et crée le tunnel `adb reverse` dès qu'un téléphone est branché.
+- **QR code** pour jouer depuis le navigateur du téléphone sans rien installer, **code PIN** pour l'accès Internet, vibrations du jeu renvoyées au téléphone.
+
+![PocketPad Hub — connexion](docs/screenshots/08-pc-connexion.jpg)
+
+## Démarrage rapide
+
+1. **PC** : installez `PocketPad-Hub-Setup.exe` et acceptez le pilote **ViGEmBus**. Au premier lancement, autorisez PocketPad Hub dans le pare-feu Windows (réseau privé).
+2. **Téléphone** : installez `PocketPad-Android.apk` (autorisez l'installation depuis une source inconnue).
+3. Dans l'app, choisissez votre manette et son coloris, puis **Connecter au PC** :
+   - **USB** : activez le *débogage USB* (Paramètres › À propos › 7 appuis sur « Numéro de build », puis Options pour les développeurs), branchez le câble, touchez « Connecter par USB ».
+   - **Wi-Fi** : saisissez l'adresse affichée par le Hub (ex. `192.168.1.20`).
+   - **Internet** : adresse publique du PC (port TCP 47800 redirigé sur la box) + code PIN du Hub.
+   - **Bluetooth** : « Activer la manette Bluetooth » › « Rendre visible », puis sur le PC : Paramètres › Bluetooth › Ajouter un appareil.
+4. Touchez **Jouer**.
+
+> Le mode Bluetooth expose une manette HID générique (DirectInput) : compatible Steam, émulateurs et la plupart des jeux. Pour les jeux XInput uniquement, utilisez l'USB ou le Wi-Fi avec le Hub.
+
+## Architecture
+
+```
+Téléphone : APK PocketPad                         PC Windows : PocketPad Hub
+┌───────────────────────────────┐   WebSocket   ┌──────────────────────────────┐
+│ manette tactile (photo réelle)│ ────────────▶ │ serveur HTTP + WebSocket     │──▶ ViGEmBus ──▶ Jeux
+│ Capacitor + plugin Bluetooth  │  USB (adb) /  │ ADB, PIN, 4 joueurs          │   Xbox 360 / DS4
+└───────────────────────────────┘  Wi-Fi / Web  └──────────────────────────────┘
+               │                ◀── vibrations ──
+               └──────────── Bluetooth HID (sans Hub) ────────────▶ Windows
+```
+
+| Dossier | Contenu |
+| --- | --- |
+| `src/mobile/` | **APK** : vitrine, connexion, manette jouable `PhotoPad.tsx` |
+| `src/pc/` | **Logiciel PC** : interface de PocketPad Hub |
+| `src/shared/` | Protocole commun, catalogue des manettes (photos + position de chaque bouton) |
+| `android/` | Projet Android (Capacitor) + plugin natif `BluetoothGamepadPlugin` / `HidGamepad` |
+| `desktop/` | Programme Electron du Hub : serveur, manettes virtuelles ViGEm, tunnel ADB, installateur |
+| `.github/workflows/build.yml` | Compile l'APK et l'installateur Windows, puis publie la release |
+
+## Développement
 
 ```bash
-git clone <ce-dépôt> && cd pocketpad
-pip install -e ".[windows,qr]"      # Windows  (installe vgamepad + driver ViGEmBus)
-pip install -e ".[linux,qr]"        # Linux    (uinput : accès à /dev/uinput requis)
-pip install -e ".[keyboard,qr]"     # autre / jeux sans manette : émulation clavier
+pnpm install
+pnpm dev                  # aperçu des deux logiciels dans leur appareil
+pnpm build:mobile         # APK     → out/mobile
+pnpm build:pc             # PC      → out/pc
+
+# APK Android
+pnpm exec cap sync android
+cd android && ./gradlew assembleDebug
+
+# Logiciel PC
+mkdir -p desktop/app && cp -r out/mobile out/pc desktop/app/
+cd desktop && npm install
+npm start                 # lance PocketPad Hub
+npm run selftest          # auto-test du serveur
+npm run dist:win          # installateur Windows
 ```
 
-> **Windows** : le driver [ViGEmBus](https://github.com/nefarius/ViGEmBus/releases) est requis ; `vgamepad` propose de l'installer.
+## Crédits et sécurité
 
-## Utilisation
+- Photos des manettes : Wikimedia Commons, sous licences libres. Auteurs et licences dans [CREDITS.md](CREDITS.md).
+- Aucun identifiant n'est stocké dans le dépôt. Les connexions venant d'Internet exigent le code PIN du Hub.
 
-```bash
-pocketpad                # Wi-Fi / Bluetooth PAN : affiche les liens + un QR code
-pocketpad --usb          # + mode câble USB (nécessite adb, Android platform-tools)
-pocketpad --backend keyboard   # émulation clavier (ZQSD = stick gauche, etc.)
-```
-
-Ouvre le lien sur le téléphone (il contient une clé d'appairage aléatoire), mets-le en paysage, touche **Plein écran**. C'est prêt : lance ton jeu.
-
-### 🔌 USB
-1. Active le *débogage USB* sur le téléphone Android et branche le câble.
-2. `pocketpad --usb` puis ouvre `http://localhost:8765/?key=…` sur le téléphone.
-   (iPhone : active le partage de connexion USB, puis utilise le lien « Réseau » affiché.)
-
-### 🔵 Bluetooth
-Associe le téléphone et le PC en Bluetooth, active le **partage de connexion Bluetooth** sur le téléphone, puis utilise le lien du réseau Bluetooth affiché par `pocketpad`.
-*Le Bluetooth sert ici de transport réseau ; il n'est pas émulé comme manette HID.*
-
-### 🌍 Internet
-Sur un serveur (VPS), derrière HTTPS/WSS (Caddy, nginx, Cloudflare Tunnel…) :
-```bash
-pocketpad-relay --port 9000
-```
-Sur le PC :
-```bash
-pocketpad --relay wss://relais.exemple.com --room monsalon
-```
-Ouvre le lien `https://relais.exemple.com/?room=monsalon&key=…` sur le téléphone. Le PC se connecte *vers* le relais : aucune redirection de port.
-
-## Protocole (WebSocket JSON)
-```json
-{"t":"s","b":["a","up"],"lx":0.0,"ly":1.0,"rx":0,"ry":0,"lt":0,"rt":1}
-```
-`t:"s"` = état complet (boutons actifs `b`, sticks −1…1, gâchettes 0…1), `ping/pong` = latence, `rumble` = vibrations PC → téléphone. Toutes les entrées sont validées et bornées côté serveur ; tous les boutons sont relâchés à la déconnexion.
-
-## Sécurité
-- Clé d'appairage aléatoire obligatoire (`--key` pour la fixer).
-- Sur réseau non fiable ou Internet, utilise **toujours TLS** (WSS).
-- Ne transmet que des états de manette, jamais de fichiers ni de commandes système.
-
-## Tests
-```bash
-pip install -e ".[dev]" && pytest
-```
-
-## Feuille de route
-Multi-joueurs (1 téléphone = 1 manette), gyroscope, profils de disposition, exécutable Windows (PyInstaller), appli de bureau avec interface.
-
-## Licence
-MIT
+Les noms de manettes sont cités à titre descriptif. PocketPad n'est affilié à aucun constructeur.
