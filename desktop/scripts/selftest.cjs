@@ -5,7 +5,7 @@ const http = require('http')
 const WebSocket = require('ws')
 const { createHubServer, isPrivate, guessModel } = require('../src/server.cjs')
 const { BTN } = require('../src/protocol.cjs')
-const { parseReport } = require('../src/bt-bridge.cjs')
+const { parseReport, isPocketPad } = require('../src/bt-bridge.cjs')
 
 const applied = []
 const pads = []
@@ -293,6 +293,14 @@ const get = (port, p) => new Promise((res) => http.get(`http://127.0.0.1:${port}
     assert.equal(applied.at(-1).s.b, s.b)
     hub.detachExternal('bt1')
     assert.equal(hub.players().some((x) => x.transport === 'bluetooth'), false)
+  })
+
+  await check('relais Bluetooth : reconnaît le téléphone parmi les manettes HID', () => {
+    assert.equal(isPocketPad({ product: 'PocketPad', usagePage: 1, usage: 5, vendorId: 0 }), true)
+    assert.equal(isPocketPad({ product: 'Galaxy S23', usagePage: 1, usage: 5, vendorId: 0x00e0 }), true)
+    assert.equal(isPocketPad({ product: 'Wireless Controller', usagePage: 1, usage: 5, vendorId: 0x054c }), false)
+    assert.equal(isPocketPad({ product: 'Xbox Controller', usagePage: 1, usage: 5, vendorId: 0x045e }), false)
+    assert.equal(isPocketPad({ product: 'PocketPad', usagePage: 12, usage: 1, vendorId: 0 }), false)
   })
 
   await check('reconnaît le modèle des manettes de la TV', () => {

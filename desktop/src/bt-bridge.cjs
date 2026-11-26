@@ -8,6 +8,17 @@ try {
 }
 
 const ORDER = ['A', 'B', 'X', 'Y', 'LB', 'RB', 'LT', 'RT', 'BACK', 'START', 'LS', 'RS', 'GUIDE', 'TOUCHPAD']
+
+// Windows nomme en général la manette d'après le service Bluetooth « PocketPad ». À défaut, une manette HID
+// annoncée par la pile Bluetooth d'Android (identifiants fabricant Google) est aussi reconnue.
+const ANDROID_VENDORS = new Set([0x18d1, 0x00e0])
+
+/** Appareil HID qui correspond au téléphone PocketPad appairé en Bluetooth. */
+function isPocketPad(d) {
+  if (d.usagePage !== undefined && d.usagePage !== 1) return false
+  if (/pocketpad/i.test(`${d.product || ''} ${d.manufacturer || ''}`)) return true
+  return ANDROID_VENDORS.has(d.vendorId) && (d.usage === 5 || d.usage === 4)
+}
 const BTN = require('./protocol.cjs').BTN
 const HAT = [BTN.DPAD_UP, BTN.DPAD_UP | BTN.DPAD_RIGHT, BTN.DPAD_RIGHT, BTN.DPAD_DOWN | BTN.DPAD_RIGHT, BTN.DPAD_DOWN, BTN.DPAD_DOWN | BTN.DPAD_LEFT, BTN.DPAD_LEFT, BTN.DPAD_UP | BTN.DPAD_LEFT]
 
@@ -71,7 +82,7 @@ class BtBridge {
     } catch {
       return
     }
-    const found = list.filter((d) => /pocketpad/i.test(`${d.product || ''} ${d.manufacturer || ''}`) && (d.usagePage === undefined || d.usagePage === 1))
+    const found = list.filter(isPocketPad)
     for (const d of found) {
       if (!d.path || this.open.has(d.path)) continue
       try {
@@ -103,4 +114,4 @@ class BtBridge {
   }
 }
 
-module.exports = { BtBridge, parseReport }
+module.exports = { BtBridge, parseReport, isPocketPad }
