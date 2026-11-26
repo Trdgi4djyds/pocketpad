@@ -51,4 +51,8 @@ export interface HubApi {
   regeneratePin(): void
   installDriver(): void
   openExternal(url: string): void
+  /** Ouvre le panneau Windows « Contrôleurs de jeu » (joy.cpl) */
+  testController(): void
+  /** Ajoute la règle de pare-feu Windows pour le Wi-Fi (demande l'autorisation administrateur) */
+  allowFirewall(): void
 }

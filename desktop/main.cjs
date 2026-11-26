@@ -1,5 +1,6 @@
 // PocketPad Hub — processus principal Electron.
 const { app, BrowserWindow, ipcMain, shell, Menu } = require('electron')
+const { spawn } = require('child_process')
 const fs = require('fs')
 const os = require('os')
 const path = require('path')
@@ -115,6 +116,19 @@ ipcMain.on('hub:installDriver', () => {
     log('Installation du pilote ViGEmBus lancée. Redémarrez le Hub ensuite.')
   } else shell.openExternal('https://github.com/nefarius/ViGEmBus/releases/latest')
   driverCache.at = 0
+})
+ipcMain.on('hub:joycpl', () => {
+  if (process.platform !== 'win32') return log('Le test des manettes utilise le panneau de Windows.', 'warn')
+  // Panneau « Configurer les contrôleurs de jeu USB » : la manette virtuelle doit y apparaître
+  spawn('control.exe', ['joy.cpl'], { detached: true, stdio: 'ignore', windowsHide: false }).unref()
+  log('Panneau Windows « Contrôleurs de jeu » ouvert')
+})
+ipcMain.on('hub:firewall', () => {
+  if (process.platform !== 'win32') return
+  // Règle par ports (47800 à 47809) : fonctionne aussi pour la version portable
+  const rule = 'advfirewall firewall add rule name=PocketPadHub dir=in action=allow protocol=TCP localport=47800-47809'
+  const ps = spawn('powershell.exe', ['-NoProfile', '-Command', `Start-Process netsh -Verb RunAs -WindowStyle Hidden -Wait -ArgumentList '${rule}'`], { windowsHide: true })
+  ps.on('exit', (code) => log(code === 0 ? 'Pare-feu Windows : PocketPad Hub autorisé en Wi-Fi' : 'Autorisation du pare-feu annulée', code === 0 ? 'success' : 'warn'))
 })
 ipcMain.on('hub:open', (_e, url) => {
   if (/^https?:\/\//i.test(String(url))) shell.openExternal(url)

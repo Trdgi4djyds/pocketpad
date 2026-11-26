@@ -16,7 +16,7 @@ export function createDemoHub(): HubApi {
     driver: { available: true, connected: true, installer: true },
     adb: { available: true, devices: [{ serial: 'R5CT20XYZ', model: 'Galaxy S23', state: 'device', reversed: true }] },
     players: [
-      { id: 'p1', slot: 1, name: 'Alex', model: 'dualsense', skin: 'ds-black', transport: 'wifi', address: '192.168.1.34', latency: 9, out: 'ds4', virtual: true, state: neutralState(), connectedAt: now - 1000 * 60 * 14 },
+      { id: 'p1', slot: 1, name: 'Alex', model: 'dualsense', skin: 'ds-black', transport: 'wifi', address: '192.168.1.34', latency: 9, out: 'x360', virtual: true, state: neutralState(), connectedAt: now - 1000 * 60 * 14 },
       { id: 'p2', slot: 2, name: 'Sam', model: 'xbox', skin: 'xb-series-black', transport: 'usb', address: 'USB · Galaxy S23', latency: 3, out: 'x360', virtual: true, state: neutralState(), connectedAt: now - 1000 * 60 * 3 },
     ],
     logs: [
@@ -92,6 +92,12 @@ export function createDemoHub(): HubApi {
     },
     openExternal(url) {
       window.open(url, '_blank', 'noopener')
+    },
+    testController() {
+      push({ logs: [{ ts: Date.now(), level: 'info', msg: 'Panneau Windows « Contrôleurs de jeu » ouvert (démo)' }, ...snap.logs] })
+    },
+    allowFirewall() {
+      push({ logs: [{ ts: Date.now(), level: 'success', msg: 'Règle de pare-feu ajoutée (démo)' }, ...snap.logs] })
     },
   }
 }

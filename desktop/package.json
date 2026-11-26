@@ -1,7 +1,7 @@
 {
   "name": "pocketpad-hub",
   "productName": "PocketPad Hub",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "PocketPad Hub — transforme votre téléphone en manette PC (USB, Wi-Fi, Internet).",
   "author": "PocketPad",
   "license": "MIT",
@@ -72,11 +72,13 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "shortcutName": "PocketPad Hub",
-      "artifactName": "PocketPad-Hub-Setup-${version}.${ext}",
-      "include": "build/installer.nsh"
+      "artifactName": "PocketPad-Hub-Setup.${ext}",
+      "include": "build/installer.nsh",
+      "perMachine": true,
+      "allowElevation": true
     },
     "portable": {
-      "artifactName": "PocketPad-Hub-Portable-${version}.${ext}"
+      "artifactName": "PocketPad-Hub-Portable.${ext}"
     },
     "linux": {
       "target": [

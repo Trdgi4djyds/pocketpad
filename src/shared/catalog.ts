@@ -83,7 +83,7 @@ export const CONTROLLERS: ControllerModel[] = [
     short: 'PS5',
     tagline: 'Retour haptique, gâchettes adaptatives et pavé tactile.',
     glyphs: 'ps',
-    out: 'ds4',
+    out: 'x360',
     labels: { back: 'Create', start: 'Options', guide: 'PS', lb: 'L1', rb: 'R1', lt: 'L2', rt: 'R2' },
     skins: [
       skin('ds-black', 1265 / 1800, {
@@ -137,7 +137,7 @@ export const CONTROLLERS: ControllerModel[] = [
     short: 'PS4',
     tagline: 'L\'iconique : pavé tactile cliquable et barre lumineuse.',
     glyphs: 'ps',
-    out: 'ds4',
+    out: 'x360',
     labels: { back: 'Share', start: 'Options', guide: 'PS', lb: 'L1', rb: 'R1', lt: 'L2', rt: 'R2' },
     skins: [
       skin('ds4-black', 1165 / 1800, {

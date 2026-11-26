@@ -128,7 +128,18 @@ function PlayersView({ snap, api, focused, setFocus, goConnect }: { snap: HubSna
   const slots = [1, 2, 3, 4].map((n) => snap.players.find((p) => p.slot === n) ?? null)
   return (
     <div className="flex h-full flex-col">
-      <div className="relative min-h-0 flex-1">{focused ? <Hero p={focused} api={api} /> : <EmptyHero snap={snap} onConnect={goConnect} />}</div>
+      {!snap.driver.connected && (
+        <div className="relative z-20 mb-4 flex items-center gap-3 rounded-2xl border border-amber-300/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-100 backdrop-blur-md">
+          <ShieldAlert className="size-5 shrink-0" />
+          <span className="flex-1">Pilote ViGEmBus absent : les jeux (GTA V…) ne verront pas la manette du téléphone.</span>
+          {snap.platform === 'win32' && (
+            <button onClick={() => api.installDriver()} className="rounded-full bg-amber-200 px-4 py-1.5 text-xs font-semibold text-[#1a1405]">
+              Installer le pilote
+            </button>
+          )}
+        </div>
+      )}
+      <div className="relative min-h-0 flex-1">{focused ? <Hero p={focused} api={api} /> : <EmptyHero snap={snap} api={api} onConnect={goConnect} />}</div>
       <div className="mt-6 flex items-end gap-4">
         {slots.map((p, i) => (p ? <PlayerTile key={p.id} p={p} active={focused?.id === p.id} onClick={() => setFocus(p.id)} /> : <EmptyTile key={i} n={i + 1} onClick={goConnect} />))}
         <ConnectTile snap={snap} onClick={goConnect} />
@@ -185,19 +196,24 @@ function Hero({ p, api }: { p: HubPlayer; api: HubApi }) {
             </div>
           ))}
         </dl>
-        <div className="mt-6 flex items-center gap-3">
+        <div className="mt-6 flex flex-wrap items-center gap-2.5">
           <div className="flex rounded-full border border-white/15 bg-black/35 p-1 text-xs backdrop-blur-md">
             {(['x360', 'ds4'] as const).map((o) => (
-              <button key={o} onClick={() => api.setOutput(p.id, o)} className={cls('rounded-full px-4 py-1.5 transition', p.out === o ? 'bg-white text-[#0a0a10]' : 'text-white/65 hover:text-white')}>
+              <button key={o} onClick={() => api.setOutput(p.id, o)} className={cls('whitespace-nowrap rounded-full px-4 py-1.5 transition', p.out === o ? 'bg-white text-[#0a0a10]' : 'text-white/65 hover:text-white')}>
                 {o === 'x360' ? 'Xbox 360' : 'DualShock 4'}
               </button>
             ))}
           </div>
-          <button onClick={() => api.kick(p.id)} className="flex items-center gap-1.5 rounded-full border border-white/15 px-4 py-2 text-xs text-white/70 hover:bg-white/10 hover:text-white">
+          <button onClick={() => api.kick(p.id)} className="flex items-center gap-1.5 whitespace-nowrap rounded-full border border-white/15 px-4 py-2 text-xs text-white/70 hover:bg-white/10 hover:text-white">
             <X className="size-3.5" /> Déconnecter
+          </button>
+          <button onClick={() => api.testController()} className="flex items-center gap-1.5 whitespace-nowrap rounded-full border border-white/15 px-4 py-2 text-xs text-white/70 hover:bg-white/10 hover:text-white">
+            <Gamepad2 className="size-3.5" /> Tester dans Windows
           </button>
         </div>
         {!p.virtual && p.transport !== 'bluetooth' && <p className="mt-3 text-xs text-amber-200/85">Manette virtuelle inactive : installez le pilote ViGEmBus (onglet Pilote).</p>}
+        {p.virtual && p.out === 'ds4' && <p className="mt-3 max-w-md text-xs text-amber-200/85">GTA V et la plupart des jeux PC attendent une manette Xbox : choisissez « Xbox 360 » ci-dessus.</p>}
+        {p.transport === 'bluetooth' && <p className="mt-3 max-w-md text-xs text-amber-200/85">En Bluetooth, Windows voit une manette générique que GTA V ne reconnaît pas. Connectez-vous en USB ou en Wi-Fi.</p>}
       </div>
       <div ref={fitRef} className="absolute bottom-[2%] right-[1%] flex h-[88%] w-[58%] flex-col items-center justify-end">
         <div className="relative" style={{ width: photoW }}>
@@ -215,17 +231,37 @@ function Hero({ p, api }: { p: HubPlayer; api: HubApi }) {
   )
 }
 
-function EmptyHero({ snap, onConnect }: { snap: HubSnapshot; onConnect: () => void }) {
+function EmptyHero({ snap, api, onConnect }: { snap: HubSnapshot; api: HubApi; onConnect: () => void }) {
   const qr = useQr(snap)
+  const steps = [
+    { ok: snap.driver.connected, title: 'Pilote ViGEmBus', desc: snap.driver.connected ? 'Installé : Windows peut créer des manettes Xbox 360.' : 'À installer une fois (bouton ci-dessus).' },
+    { ok: false, title: 'Téléphone connecté', desc: 'App PocketPad › Connecter au PC › USB ou Wi-Fi (pas Bluetooth pour GTA V).' },
+    { ok: false, title: 'Test Windows puis jeu', desc: 'La manette « Controller (XBOX 360 For Windows) » apparaît : lancez le jeu.' },
+  ]
   return (
     <div className="absolute inset-0 flex items-center justify-between gap-10">
       <div className="max-w-xl">
         <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/55">Prêt · {snap.addresses[0] ?? '127.0.0.1'}:{snap.port}</div>
         <h1 className="mt-3 font-display text-[60px] font-extrabold leading-[0.95] tracking-[-0.03em]">Branchez votre téléphone, il devient une manette.</h1>
-        <p className="mt-4 text-base leading-relaxed text-white/65">Ouvrez l'application PocketPad sur Android et choisissez USB, Wi-Fi ou Bluetooth. Windows verra une vraie manette Xbox 360 ou DualShock 4.</p>
-        <button onClick={onConnect} className="mt-6 rounded-full bg-white px-6 py-3 font-display text-sm font-semibold text-[#0a0a10]">
-          Voir les méthodes de connexion
-        </button>
+        <ol className="mt-6 grid gap-3">
+          {steps.map((st, i) => (
+            <li key={st.title} className="flex items-start gap-3">
+              <span className={cls('grid size-7 shrink-0 place-items-center rounded-full font-display text-xs font-bold', st.ok ? 'bg-emerald-400 text-[#06130c]' : 'border border-white/25 text-white/70')}>{st.ok ? '✓' : i + 1}</span>
+              <span>
+                <span className="block font-display text-[15px] font-semibold">{st.title}</span>
+                <span className="block text-sm text-white/60">{st.desc}</span>
+              </span>
+            </li>
+          ))}
+        </ol>
+        <div className="mt-6 flex gap-3">
+          <button onClick={onConnect} className="rounded-full bg-white px-6 py-3 font-display text-sm font-semibold text-[#0a0a10]">
+            Méthodes de connexion
+          </button>
+          <button onClick={() => api.testController()} className="rounded-full border border-white/20 px-6 py-3 text-sm font-medium text-white/85 hover:bg-white/10">
+            Tester dans Windows
+          </button>
+        </div>
       </div>
       {qr && (
         <div className="rounded-3xl bg-white p-4 shadow-2xl">
@@ -309,9 +345,9 @@ function ConnectView({ snap, api }: { snap: HubSnapshot; api: HubApi }) {
   const usbReady = snap.adb.devices.some((d) => d.reversed)
   const methods = [
     { icon: Usb, title: 'Câble USB', ok: usbReady, desc: usbReady ? 'Tunnel actif : touchez « Connecter par USB » dans l\'app.' : 'Activez le débogage USB sur le téléphone puis branchez le câble. Le tunnel ADB se crée tout seul.' },
-    { icon: Wifi, title: 'Wi-Fi', ok: true, desc: `Même réseau : entrez ${ip} dans l'app, ou scannez le QR code pour jouer dans le navigateur.` },
+    { icon: Wifi, title: 'Wi-Fi', ok: true, desc: `Même réseau : entrez ${ip} dans l'app, ou scannez le QR code. Si le téléphone ne se connecte pas, autorisez le Hub dans le pare-feu.`, action: { label: 'Autoriser dans le pare-feu', run: () => api.allowFirewall() } },
     { icon: Globe, title: 'Internet', ok: false, desc: `Redirigez le port TCP ${snap.port} de votre box vers ce PC, puis utilisez votre adresse publique et le PIN.` },
-    { icon: Bluetooth, title: 'Bluetooth', ok: false, desc: 'Dans l\'app : Bluetooth › Activer › Rendre visible. Sur le PC : Paramètres › Bluetooth › Ajouter un appareil.' },
+    { icon: Bluetooth, title: 'Bluetooth', ok: false, desc: 'Manette générique sans logiciel (Steam, émulateurs). Non reconnue par GTA V et les jeux Xbox : utilisez USB ou Wi-Fi.' },
   ]
   return (
     <div className="absolute inset-0 flex items-center gap-8 pt-4">
@@ -341,6 +377,11 @@ function ConnectView({ snap, api }: { snap: HubSnapshot; api: HubApi }) {
               {m.ok && <span className="ml-auto rounded-full bg-emerald-400/15 px-2.5 py-0.5 text-[11px] text-emerald-300">Prêt</span>}
             </div>
             <p className="mt-3 text-sm leading-relaxed text-white/65">{m.desc}</p>
+            {'action' in m && m.action && (
+              <button onClick={m.action.run} className="mt-3 rounded-full border border-white/20 px-4 py-1.5 text-xs font-medium text-white/85 hover:bg-white/10">
+                {m.action.label}
+              </button>
+            )}
           </Glass>
         ))}
       </div>

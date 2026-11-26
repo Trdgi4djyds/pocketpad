@@ -13,4 +13,6 @@ contextBridge.exposeInMainWorld('pocketpadHub', {
   regeneratePin: () => ipcRenderer.send('hub:pin'),
   installDriver: () => ipcRenderer.send('hub:installDriver'),
   openExternal: (url) => ipcRenderer.send('hub:open', url),
+  testController: () => ipcRenderer.send('hub:joycpl'),
+  allowFirewall: () => ipcRenderer.send('hub:firewall'),
 })

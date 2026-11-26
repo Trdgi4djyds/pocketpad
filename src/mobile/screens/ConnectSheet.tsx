@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Bluetooth, Check, Globe, Loader2, Radio, Settings2, Unplug, Usb, Wifi, X } from 'lucide-react'
 import { BluetoothGamepad, connection, useConnection, type BtDevice } from '../connection'
 import { rememberHost, setSettings, useSettings } from '../store'
-import { getModel } from '../../shared/catalog'
 import { cls, isLanAddress } from '../../shared/cls'
 import { isNative, servedByHub } from '../../shared/platform'
 import { DEFAULT_PORT } from '../../shared/protocol'
@@ -242,7 +241,7 @@ function BluetoothTab() {
   return (
     <div>
       <Title icon={<Bluetooth className="size-5" />} title="Bluetooth">
-        Le téléphone devient une vraie manette Bluetooth : Windows la reconnaît sans logiciel. Compatible Steam, émulateurs et jeux DirectInput. Pour les jeux XInput uniquement, préférez USB ou Wi-Fi avec PocketPad Hub.
+        Le téléphone devient une manette Bluetooth générique, reconnue par Windows sans logiciel (Steam, émulateurs). Attention : GTA V et les jeux qui n'acceptent que les manettes Xbox ne la voient pas. Pour eux, utilisez l'USB ou le Wi-Fi avec PocketPad Hub.
       </Title>
       {!isNative || conn.bt.supported === false ? (
         <p className="mt-6 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/60 short:mt-3 short:text-xs">
@@ -294,10 +293,9 @@ function BluetoothTab() {
 
 function SettingsTab() {
   const s = useSettings()
-  const model = getModel(s.modelId)
   const outputs = [
-    { id: 'auto' as const, label: `Auto (${model.out === 'ds4' ? 'DualShock 4' : 'Xbox 360'})` },
-    { id: 'x360' as const, label: 'Xbox 360' },
+    { id: 'auto' as const, label: 'Auto (Xbox 360)' },
+    { id: 'x360' as const, label: 'Xbox 360 (recommandé)' },
     { id: 'ds4' as const, label: 'DualShock 4' },
   ]
   return (
@@ -342,7 +340,7 @@ function SettingsTab() {
             <span className={cls('absolute top-0.5 size-5 rounded-full bg-white transition-all', s.haptics ? 'left-[22px]' : 'left-0.5')} />
           </span>
         </button>
-        <p className="text-xs text-white/35">PocketPad 1.0 · Photos des manettes : Wikimedia Commons (licences libres, voir CREDITS.md). Les sticks se cliquent (L3/R3) d'une pression brève.</p>
+        <p className="text-xs text-white/35">PocketPad 1.0.1 · La sortie Xbox 360 fonctionne avec presque tous les jeux PC (GTA V, Forza, EA FC…). Photos des manettes : Wikimedia Commons (licences libres, voir CREDITS.md). Les sticks se cliquent (L3/R3) d'une pression brève.</p>
       </div>
     </div>
   )

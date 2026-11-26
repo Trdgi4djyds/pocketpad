@@ -18,8 +18,8 @@ En Bluetooth, le téléphone est directement reconnu par Windows comme une manet
 | Fichier | À installer sur |
 | --- | --- |
 | `PocketPad-Android.apk` | le téléphone (Android 7+, mode Bluetooth : Android 9+) |
-| `PocketPad-Hub-Setup-1.0.0.exe` | le PC Windows 10/11 — installateur (propose le pilote ViGEmBus) |
-| `PocketPad-Hub-Portable-1.0.0.exe` | le PC Windows — version portable |
+| `PocketPad-Hub-Setup.exe` | le PC Windows 10/11 — installateur (propose le pilote ViGEmBus) |
+| `PocketPad-Hub-Portable.exe` | le PC Windows — version portable |
 
 ## L'application Android (la manette)
 
@@ -58,7 +58,27 @@ De vraies photos de manettes, détourées, sur lesquelles chaque zone tactile co
    - **Bluetooth** : « Activer la manette Bluetooth » › « Rendre visible », puis sur le PC : Paramètres › Bluetooth › Ajouter un appareil.
 4. Touchez **Jouer**.
 
-> Le mode Bluetooth expose une manette HID générique (DirectInput) : compatible Steam, émulateurs et la plupart des jeux. Pour les jeux XInput uniquement, utilisez l'USB ou le Wi-Fi avec le Hub.
+> Le mode Bluetooth expose une manette générique (DirectInput) : pratique pour Steam et les émulateurs, mais **GTA V et les jeux Xbox ne la reconnaissent pas**. Pour eux, utilisez l'USB ou le Wi-Fi avec le Hub.
+
+## Jouer à GTA V (ou n'importe quel jeu PC) pas à pas
+
+GTA V, comme la plupart des jeux PC, n'accepte que les **manettes Xbox** (XInput). Il faut donc passer par **PocketPad Hub** en **USB** ou en **Wi-Fi** : c'est lui qui crée la manette Xbox 360 virtuelle que le jeu reconnaît.
+
+1. **Sur le PC** : installez `PocketPad-Hub-Setup.exe` (pas la version portable pour la première fois) et répondez **Oui** à l'installation du pilote **ViGEmBus**. Ouvrez PocketPad Hub : le bandeau orange « Pilote ViGEmBus absent » ne doit pas apparaître.
+2. **Sur le téléphone** : ouvrez PocketPad › **Connecter au PC** :
+   - **USB (recommandé)** : débogage USB activé, câble branché, autorisez le PC sur le téléphone, puis « Connecter par USB » ;
+   - **Wi-Fi** : même réseau que le PC, saisissez l'adresse affichée dans le Hub. Si rien ne se passe : Hub › Connexion › **Autoriser dans le pare-feu**.
+3. **Dans le Hub** : votre joueur apparaît. Vérifiez « Windows voit : **Xbox 360** » (sinon cliquez sur *Xbox 360*). Appuyez sur des touches du téléphone : elles s'allument sur la photo.
+4. Cliquez sur **Tester dans Windows** : la fenêtre *Contrôleurs de jeu* doit lister **Controller (XBOX 360 For Windows)**. Ouvrez *Propriétés* : les boutons et sticks doivent réagir.
+5. **Lancez GTA V** et appuyez sur une touche ou bougez un stick : le jeu passe aussitôt en mode manette.
+
+| Problème | Solution |
+| --- | --- |
+| Connecté en **Bluetooth**, GTA V ne réagit pas | Normal : le Bluetooth expose une manette générique que GTA V ignore. Utilisez USB ou Wi-Fi avec le Hub. |
+| Rien dans *Contrôleurs de jeu* | Pilote ViGEmBus absent : Hub › Pilote › Installer, puis redémarrez le Hub. |
+| « Windows voit : DualShock 4 » | Cliquez sur *Xbox 360* dans le Hub (ou app › Réglages › Xbox 360). |
+| Le téléphone ne trouve pas le PC en Wi-Fi | Même réseau Wi-Fi, réseau Windows en « Privé », bouton *Autoriser dans le pare-feu*. |
+| GTA V version Steam | Steam › GTA V › Propriétés › Manette : laissez « Par défaut ». |
 
 ## Architecture
 
